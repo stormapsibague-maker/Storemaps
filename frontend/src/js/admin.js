@@ -879,4 +879,4 @@ function useLocationForStoreEdit() {
     );
 }
 
-document.addEventListener('DOMContentLoaded', checkAuth);
+document.addEventListener('DOMContentLoaded', checkAuth); 
