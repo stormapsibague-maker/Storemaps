@@ -89,7 +89,10 @@ router.post('/', companyAuth, upload.single('video'), async (req, res) => {
 
 router.get('/admin/flagged', superAdminAuth, async (req, res) => {
   try {
-    const videos = await Video.find({}).populate('storeId', 'name').limit(20);
+    const videos = await Video.find({})
+      .populate('storeId', 'name')
+      .populate('comments.userId', 'displayName name email')
+      .limit(50);
     res.json(videos);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -140,16 +143,25 @@ router.delete('/:id', companyAuth, async (req, res) => {
   }
 });
 
-// Dar like a video
+// Dar/quitar like a video (toggle - un like por usuario)
 router.post('/:id/like', authMiddleware, async (req, res) => {
   try {
     const video = await Video.findById(req.params.id);
     if (!video) return res.status(404).json({ message: 'Video no encontrado' });
-    
-    video.likes = (video.likes || 0) + 1;
+
+    const userId = req.user.userId;
+    const alreadyLiked = video.likes.some(id => id.toString() === userId.toString());
+
+    if (alreadyLiked) {
+      // Quitar like
+      video.likes = video.likes.filter(id => id.toString() !== userId.toString());
+    } else {
+      // Dar like
+      video.likes.push(userId);
+    }
+
     await video.save();
-    
-    res.json({ likes: video.likes });
+    res.json({ likes: video.likes.length, liked: !alreadyLiked });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

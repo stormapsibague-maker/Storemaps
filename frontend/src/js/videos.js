@@ -37,7 +37,7 @@ function renderVideos() {
             <div class="video-actions">
                 <button class="video-action-btn" onclick="likeVideo('${video._id}', this)">
                     <i class="fas fa-heart"></i>
-                    <span>${video.likes || 0}</span>
+                    <span>${Array.isArray(video.likes) ? video.likes.length : (video.likes || 0)}</span>
                 </button>
                 <button class="video-action-btn" onclick="showComments('${video._id}')">
                     <i class="fas fa-comment"></i>
@@ -78,9 +78,18 @@ async function likeVideo(videoId, btn) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
+            const data = await response.json();
             const span = btn.querySelector('span');
-            span.textContent = parseInt(span.textContent) + 1;
-            btn.style.color = 'var(--primary)';
+            // Usar el conteo real del servidor
+            span.textContent = data.likes;
+            // Cambiar color según si se dio o quitó like
+            if (data.liked) {
+                btn.style.color = '#ef4444';
+                btn.querySelector('i').style.transform = 'scale(1.3)';
+                setTimeout(() => btn.querySelector('i').style.transform = 'scale(1)', 200);
+            } else {
+                btn.style.color = 'white';
+            }
         }
     } catch (error) { console.error('Error:', error); }
 }
