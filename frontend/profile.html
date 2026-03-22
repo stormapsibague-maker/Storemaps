@@ -1,0 +1,2619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storemaps | Perfil</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+body{background:#f5f5f5;color:#374151;}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 24px;background:white;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.logo{color:#16a34a;font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.search-bar{display:flex;align-items:center;background:#f3f4f6;padding:9px 16px;border-radius:30px;gap:8px;}
+.search-bar input{border:none;background:transparent;outline:none;width:240px;font-size:14px;}
+.location{color:#555;font-size:14px;display:flex;align-items:center;gap:6px;}
+.main-menu{display:flex;gap:6px;padding:10px 20px;background:white;border-bottom:1px solid #e5e7eb;}
+.main-menu a{text-decoration:none;color:#555;font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;transition:.2s;}
+.main-menu a:hover{background:#f0fdf4;color:#16a34a;}
+.main-menu a.active{color:#16a34a;font-weight:700;background:#f0fdf4;}
+.screen{display:none;}.screen.active{display:block;}
+.container{max-width:960px;margin:40px auto;padding:0 20px;}
+.page-title{text-align:center;margin-bottom:32px;}
+.page-title h1{font-size:28px;font-weight:800;margin-bottom:8px;}
+.page-title p{color:#6b7280;font-size:15px;}
+.roles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+@media(max-width:720px){.roles-grid{grid-template-columns:1fr;}}
+.role-card{background:white;border-radius:18px;padding:32px 24px;text-align:center;border:2px solid transparent;box-shadow:0 4px 16px rgba(0,0,0,.07);transition:.3s;}
+.role-card:hover{transform:translateY(-5px);box-shadow:0 10px 28px rgba(0,0,0,.12);}
+.role-card.user:hover{border-color:#3b82f6;}.role-card.empresa:hover{border-color:#f59e0b;}.role-card.admin:hover{border-color:#7c3aed;}
+.role-icon{font-size:48px;margin-bottom:14px;}
+.role-card.user .role-icon{color:#3b82f6;}.role-card.empresa .role-icon{color:#f59e0b;}.role-card.admin .role-icon{color:#7c3aed;}
+.role-card h2{font-size:18px;font-weight:700;margin-bottom:8px;}
+.role-card p{font-size:13px;color:#6b7280;line-height:1.6;margin-bottom:20px;}
+.enter-btn{width:100%;padding:11px 0;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.role-card.user .enter-btn{background:#eff6ff;color:#3b82f6;}.role-card.user .enter-btn:hover{background:#3b82f6;color:white;}
+.role-card.empresa .enter-btn{background:#fffbeb;color:#f59e0b;}.role-card.empresa .enter-btn:hover{background:#f59e0b;color:white;}
+.role-card.admin .enter-btn{background:#f5f3ff;color:#7c3aed;}.role-card.admin .enter-btn:hover{background:#7c3aed;color:white;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(5px);}
+.modal-bg.open{display:flex;}
+.modal{background:white;border-radius:22px;width:100%;max-width:460px;position:relative;box-shadow:0 24px 70px rgba(0,0,0,.25);overflow:hidden;max-height:90vh;overflow-y:auto;}
+.modal-header{padding:28px 32px 0;}.modal-body{padding:16px 32px 28px;}
+.modal-header .login-icon{font-size:44px;margin-bottom:12px;}
+.modal-header h2{font-size:22px;font-weight:800;margin-bottom:4px;}
+.modal-header .subtitle{color:#6b7280;font-size:14px;margin-bottom:16px;}
+.close-modal{position:absolute;top:16px;right:18px;background:#f3f4f6;border:none;border-radius:50%;width:32px;height:32px;font-size:15px;cursor:pointer;color:#6b7280;transition:.2s;display:flex;align-items:center;justify-content:center;z-index:10;}
+.close-modal:hover{background:#e5e7eb;color:#111;}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;}
+.form-group input{width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;outline:none;transition:.2s;background:#fafafa;}
+.form-group input:focus{border-color:#16a34a;background:white;box-shadow:0 0 0 3px rgba(22,163,74,.1);}
+.btn-login{width:100%;padding:13px;color:white;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;transition:.2s;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-login:hover{opacity:.9;transform:translateY(-1px);}
+.btn-login:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.verde{background:linear-gradient(135deg,#16a34a,#22c55e);}
+.amarillo{background:linear-gradient(135deg,#f59e0b,#fbbf24);}
+.morado{background:linear-gradient(135deg,#7c3aed,#a855f7);}
+.gris{background:#f3f4f6;color:#374151!important;}
+.btn-google{background:white;color:#374151;border:1.5px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.btn-google:hover{background:#f9fafb;}
+.divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:#9ca3af;font-size:13px;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#e5e7eb;}
+.alert{padding:11px 14px;border-radius:10px;font-size:13px;font-weight:500;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.alert.error{background:#fee2e2;color:#dc2626;}.alert.success{background:#dcfce7;color:#16a34a;}.alert.warning{background:#fef3c7;color:#d97706;}
+.dashboard{max-width:1000px;margin:28px auto;padding:0 20px;}
+.dash-header{display:flex;align-items:center;gap:16px;background:white;padding:20px 24px;border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.07);margin-bottom:22px;}
+.avatar{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:white;flex-shrink:0;overflow:hidden;}
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.avatar.user{background:linear-gradient(135deg,#3b82f6,#60a5fa);}
+.avatar.empresa{background:linear-gradient(135deg,#f59e0b,#fcd34d);}
+.avatar.admin{background:linear-gradient(135deg,#7c3aed,#a78bfa);}
+.dash-header-info h2{font-size:19px;font-weight:700;}
+.dash-header-info p{color:#6b7280;font-size:13px;margin-top:2px;}
+.role-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-top:4px;}
+.role-badge.user{background:#eff6ff;color:#3b82f6;}.role-badge.empresa{background:#fffbeb;color:#f59e0b;}.role-badge.admin{background:#f5f3ff;color:#7c3aed;}
+.btn-logout{margin-left:auto;background:#fee2e2;color:#ef4444;border:none;padding:8px 18px;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.btn-logout:hover{background:#ef4444;color:white;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+@media(max-width:600px){.stats-row{grid-template-columns:repeat(2,1fr);}}
+.stat-card{background:white;border-radius:12px;padding:18px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.05);}
+.stat-card .stat-num{font-size:26px;font-weight:800;color:#16a34a;}
+.stat-card .stat-label{font-size:12px;color:#6b7280;margin-top:3px;}
+.tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.tab{background:white;border:2px solid transparent;padding:8px 16px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:600;color:#6b7280;transition:.2s;display:flex;align-items:center;gap:6px;}
+.tab:hover{border-color:#16a34a;color:#16a34a;}
+.tab.active{background:#f0fdf4;border-color:#16a34a;color:#16a34a;}
+.tab-content{display:none;background:white;border-radius:14px;padding:24px;box-shadow:0 4px 14px rgba(0,0,0,.06);}
+.tab-content.active{display:block;}
+.section-title{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.product-form{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:600px){.product-form{grid-template-columns:1fr;}}
+.form-col-full{grid-column:1/-1;}
+.product-item{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:10px;transition:.2s;}
+.product-item:hover{border-color:#16a34a;}
+.product-item img{width:56px;height:56px;border-radius:8px;object-fit:cover;}
+.product-item-info{flex:1;}
+.product-item-info h4{font-size:14px;font-weight:600;}
+.product-item-info p{font-size:12px;color:#6b7280;}
+.btn-edit{background:#eff6ff;color:#3b82f6;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-delete{background:#fee2e2;color:#ef4444;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;margin-left:4px;}
+.form-group select{width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;outline:none;background:#fafafa;}
+/* ADMIN TABLE */
+.admin-table{width:100%;border-collapse:collapse;font-size:13px;}
+.admin-table th{background:#f9fafb;padding:10px 12px;text-align:left;font-weight:600;color:#6b7280;border-bottom:2px solid #e5e7eb;}
+.admin-table td{padding:10px 12px;border-bottom:1px solid #f0f0f0;vertical-align:middle;}
+.admin-table tr:hover td{background:#f9fafb;}
+.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-user{background:#eff6ff;color:#3b82f6;}.badge-company{background:#fffbeb;color:#f59e0b;}.badge-admin{background:#f5f3ff;color:#7c3aed;}
+.badge-blocked{background:#fee2e2;color:#ef4444;}
+.btn-sm{padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:600;}
+.btn-sm-red{background:#fee2e2;color:#ef4444;}.btn-sm-red:hover{background:#ef4444;color:white;}
+.btn-sm-yellow{background:#fef3c7;color:#d97706;}.btn-sm-yellow:hover{background:#f59e0b;color:white;}
+#blockOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:9999;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:white;padding:40px;}
+#blockOverlay.show{display:flex;}
+#blockCountdown{font-size:56px;font-weight:900;color:#f87171;margin:12px 0;}
+#appToast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#111827;color:white;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:600;z-index:9998;transition:.3s;opacity:0;white-space:nowrap;pointer-events:none;}
+@media(max-width:768px){
+  .topbar{flex-wrap:wrap;gap:8px;padding:10px 14px;}
+  .search-bar{width:100%;order:3;}.search-bar input{width:100%;}
+  .location{display:none;}
+  .main-menu{overflow-x:auto;padding:8px 12px;gap:4px;}
+  .main-menu a{font-size:12px;padding:6px 10px;}
+  .modal{max-width:calc(100vw - 16px);}
+  .modal-header,.modal-body{padding-left:16px;padding-right:16px;}
+  .dashboard{padding:0 12px;margin:16px auto;}
+  .dash-header{padding:14px 16px;gap:10px;flex-wrap:wrap;}
+  .btn-logout{padding:7px 12px;font-size:12px;}
+  .tabs{gap:6px;}
+  .tab{font-size:12px;padding:7px 12px;}
+  .tab-content{padding:16px;}
+  .section-title{font-size:14px;}
+  .stat-card .stat-num{font-size:20px;}
+  #storeMap{height:220px!important;}
+  .roles-grid{grid-template-columns:1fr;gap:14px;}
+  .role-card{padding:20px 16px;}
+  .admin-table{font-size:11px;}
+  .admin-table th,.admin-table td{padding:7px 8px;}
+}
+@media(max-width:480px){
+  .topbar{padding:8px 10px;}
+  .logo{font-size:17px;}
+  .stats-row{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .product-form{grid-template-columns:1fr!important;}
+  .form-col-full{grid-column:1!important;}
+  .dash-header{flex-direction:column;align-items:flex-start;}
+  .btn-logout{margin-left:0;width:100%;justify-content:center;}
+  .modal-header h2{font-size:18px;}
+  #storeMap{height:180px!important;}
+  .tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;}
+  .tab{white-space:nowrap;}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="logo"><i class="fas fa-map-marker-alt"></i><b>Storemaps</b></div>
+  <div class="search-bar"><i class="fas fa-search" style="color:#aaa"></i><input type="text" placeholder="Buscar tiendas o productos..."></div>
+  <div class="location"><i class="fas fa-map-marker-alt"></i> El Jordán, Ibagué</div>
+</header>
+<nav class="main-menu">
+  <a href="index.html"><i class="fas fa-map"></i> Mapa</a>
+  <a href="discover.html"><i class="fas fa-compass"></i> Descubrir</a>
+  <a href="favorites.html"><i class="fas fa-heart"></i> Favoritos</a>
+  <a href="forum.html"><i class="fas fa-comments"></i> Foro</a>
+  <a href="videos.html"><i class="fas fa-video"></i> Videos</a>
+  <a href="profile.html" class="active"><i class="fas fa-user"></i> Perfil</a>
+</nav>
+
+<!-- SELECTOR DE ROL -->
+<div class="screen active" id="screenRoles">
+  <div class="container">
+    <div class="page-title">
+      <h1>¿Cómo quieres usar Storemaps?</h1>
+      <p>Selecciona tu tipo de cuenta para continuar</p>
+    </div>
+    <div class="roles-grid">
+      <div class="role-card user">
+        <div class="role-icon"><i class="fas fa-user-circle"></i></div>
+        <h2>Usuario</h2>
+        <p>Explora tiendas, guarda favoritos y comenta en el foro.</p>
+        <button class="enter-btn" onclick="openModal('modalUser')"><i class="fas fa-sign-in-alt"></i> Iniciar sesión</button>
+      </div>
+      <div class="role-card empresa">
+        <div class="role-icon"><i class="fas fa-store"></i></div>
+        <h2>Empresa / Tienda</h2>
+        <p>Publica productos, gestiona videos y promociona tu negocio.</p>
+        <button class="enter-btn" onclick="openModal('modalEmpresa')"><i class="fas fa-key"></i> Acceso empresa</button>
+      </div>
+      <div class="role-card admin">
+        <div class="role-icon"><i class="fas fa-shield-halved"></i></div>
+        <h2>Super Admin</h2>
+        <p>Modera comentarios, videos y productos del sistema.</p>
+        <button class="enter-btn" onclick="openModal('modalAdmin')"><i class="fas fa-lock"></i> Panel de control</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL USUARIO -->
+<div class="screen" id="screenUser">
+  <div class="dashboard">
+    <div class="dash-header" style="position:relative;">
+      <!-- Foto de perfil con botón de cambio -->
+      <div style="position:relative;display:inline-block;">
+        <div class="avatar user" id="userAvatarDiv">👤</div>
+        <label for="userPhotoInput" title="Cambiar foto de perfil"
+          style="position:absolute;bottom:0;right:0;background:#16a34a;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <i class="fas fa-camera" style="font-size:10px;color:white;"></i>
+        </label>
+        <input type="file" id="userPhotoInput" accept="image/*" style="display:none;" onchange="uploadProfilePhoto(this)">
+      </div>
+      <div class="dash-header-info">
+        <h2 id="userDisplayName">Usuario</h2>
+        <p id="userDisplayEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="4f3a3c3a2e3d26200f2a222e2623612c2022">[email&#160;protected]</a></p>
+        <span class="role-badge user">👤 Usuario</span>
+      </div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Salir</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="favCount">0</div><div class="stat-label">Favoritos</div></div>
+      <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Reseñas</div></div>
+      <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Foros activos</div></div>
+      <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Videos vistos</div></div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('tabFavs',this)"><i class="fas fa-heart"></i> Favoritos</div>
+      <div class="tab" onclick="switchTab('tabSettings',this)"><i class="fas fa-cog"></i> Configuración</div>
+    </div>
+    <div class="tab-content active" id="tabFavs">
+      <div class="section-title"><i class="fas fa-heart" style="color:#ef4444"></i> Tus favoritos</div>
+      <p style="color:#6b7280;font-size:14px;">Ve a <a href="favorites.html" style="color:#16a34a;font-weight:600"><i class="fas fa-heart"></i> Favoritos</a> para ver todos tus productos guardados.</p>
+    </div>
+    <div class="tab-content" id="tabSettings">
+      <div class="section-title"><i class="fas fa-cog" style="color:#6b7280"></i> Configuración</div>
+      <div class="product-form">
+        <div class="form-group"><label>Nombre</label><input type="text" id="settingName" placeholder="Tu nombre"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="settingEmail" placeholder="tu@email.com" disabled></div>
+        <div class="form-col-full"><button class="btn-login verde" onclick="saveUserProfile()"><i class="fas fa-save"></i> Guardar</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL EMPRESA -->
+<div class="screen" id="screenEmpresa">
+  <div class="dashboard">
+    <!-- Foto de portada -->
+    <div style="position:relative;width:100%;height:120px;background:#1f2937;border-radius:12px 12px 0 0;overflow:hidden;margin-bottom:-36px;">
+      <img id="empresaCoverImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;">
+      <div id="empresaCoverPlaceholder" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#4b5563;flex-direction:column;gap:4px;">
+        <i class="fas fa-image" style="font-size:24px;"></i>
+        <span style="font-size:12px;">Foto de portada</span>
+      </div>
+      <label for="empresaCoverInput" title="Cambiar foto de portada"
+        style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.6);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:6px;color:white;font-size:12px;">
+        <i class="fas fa-camera"></i> Cambiar portada
+      </label>
+      <input type="file" id="empresaCoverInput" accept="image/*" style="display:none;" onchange="uploadCoverPhoto(this)">
+    </div>
+    <div class="dash-header" style="padding-top:8px;position:relative;">
+      <!-- Foto de perfil empresa con botón -->
+      <div style="position:relative;display:inline-block;">
+        <div class="avatar empresa" id="empresaAvatarDiv" style="border:3px solid #111827;">🏪</div>
+        <label for="empresaPhotoInput" title="Cambiar foto de perfil"
+          style="position:absolute;bottom:0;right:0;background:#f59e0b;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <i class="fas fa-camera" style="font-size:10px;color:white;"></i>
+        </label>
+        <input type="file" id="empresaPhotoInput" accept="image/*" style="display:none;" onchange="uploadProfilePhoto(this)">
+      </div>
+      <div class="dash-header-info">
+        <h2 id="empresaDisplayName">Mi Tienda</h2>
+        <p id="empresaDisplayEmail"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b1d4dcc1c3d4c2d0f1d4dcd0d8dd9fd2dedc">[email&#160;protected]</a></p>
+        <span class="role-badge empresa">🏪 Empresa</span>
+      </div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Salir</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="prodCount">0</div><div class="stat-label">Productos</div></div>
+      <div class="stat-card"><div class="stat-num" id="vidCount">0</div><div class="stat-label">Videos</div></div>
+      <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Visitas</div></div>
+      <div class="stat-card"><div class="stat-num">—</div><div class="stat-label">Calificación</div></div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('tabMiTienda',this);loadMyStore()"><i class="fas fa-store"></i> Mi Tienda</div>
+      <div class="tab" onclick="switchTab('tabProducts',this)"><i class="fas fa-box"></i> Productos</div>
+      <div class="tab" onclick="switchTab('tabVideosEmp',this)"><i class="fas fa-video"></i> Videos</div>
+    </div>
+
+    <!-- TAB MI TIENDA -->
+    <div class="tab-content active" id="tabMiTienda">
+      <div id="storeStatus" style="margin-bottom:16px"></div>
+      <div class="section-title"><i class="fas fa-map-marker-alt" style="color:#ef4444"></i> Registrar / Actualizar tienda en el mapa</div>
+      <div class="product-form">
+        <div class="form-group"><label>Nombre de la tienda</label><input type="text" id="sName" placeholder="Ej: Tienda Deportes Centro"></div>
+        <div class="form-group"><label>Teléfono</label><input type="text" id="sPhone" placeholder="3001234567"></div>
+        <div class="form-group"><label>Categoría</label>
+          <select id="sCategory">
+            <option value="">Seleccionar...</option>
+            <option value="calzado">Calzado</option>
+            <option value="ropa">Ropa</option>
+            <option value="comida">Comida</option>
+            <option value="tecnologia">Tecnología</option>
+            <option value="hogar">Hogar</option>
+            <option value="belleza">Belleza</option>
+            <option value="deporte">Deporte</option>
+            <option value="mercado">Mercado</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Dirección</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="sAddress" placeholder="Calle 10 #5-20, Ibagué" style="flex:1">
+            <button type="button" onclick="geocodeAddress()" title="Buscar dirección en mapa" style="background:#3b82f6;color:white;border:none;padding:0 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;flex-shrink:0"><i class="fas fa-search-location"></i></button>
+          </div>
+        </div>
+        <div class="form-group form-col-full"><label>Descripción</label><input type="text" id="sDesc" placeholder="Describe tu tienda..."></div>
+        <div class="form-col-full">
+          <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;display:block"><i class="fas fa-map-marker-alt" style="color:#ef4444"></i> Ubicación en el mapa <span style="color:#6b7280;font-weight:400">(haz clic en el mapa para marcar tu tienda)</span></label>
+          <div id="storeMap" style="width:100%;height:280px;border-radius:12px;border:2px solid #e5e7eb;margin-bottom:8px"></div>
+          <div id="coordsDisplay" style="font-size:12px;color:#6b7280;margin-bottom:10px">📍 Haz clic en el mapa para seleccionar la ubicación</div>
+          <input type="hidden" id="sLat" value="">
+          <input type="hidden" id="sLng" value="">
+          <button type="button" class="btn-login" style="background:#3b82f6;color:white;margin-bottom:8px" onclick="useMyLocation()"><i class="fas fa-crosshairs"></i> Usar mi ubicación actual</button>
+        </div>
+
+        <!-- HORARIO -->
+        <div class="form-col-full">
+          <label style="font-size:13px;font-weight:700;color:#374151;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+            <i class="fas fa-clock" style="color:#f59e0b"></i> Horario de atención
+          </label>
+          <div style="background:#f9fafb;border-radius:12px;padding:16px;border:1.5px solid #e5e7eb;">
+            <div style="display:grid;gap:8px;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span style="font-size:13px;font-weight:600;min-width:36px;color:#374151;">Lun</span>
+                <input type="time" id="sch_monday_open" style="padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+                <span style="color:#9ca3af;font-size:12px;">—</span>
+                <input type="time" id="sch_monday_close" style="padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+                <label style="font-size:12px;color:#6b7280;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="sch_monday_closed" onchange="toggleDayClosed('monday')"> Cerrado</label>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span style="font-size:13px;font-weight:600;min-width:36px;color:#374151;">Mar</span>
+                <input type="time" id="sch_tuesday_open" style="padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+                <span style="color:#9ca3af;font-size:12px;">—</span>
+                <input type="time" id="sch_tuesday_close" style="padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+                <label style="font-size:12px;color:#6b7280;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="sch_tuesday_closed" onchange="toggleDayClosed('tuesday')"> Cerrado</label>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span style="font-size:13px;font-weight:600;min-width:36px;color:#374151;">Mié</span>
+                <input type="time" id="sch_wednesday_open" style="padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+                <span style="color:#9ca3af;font-size:12px;">—</span>
+                <input type="time" id="sch_wednesday_close" style="padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+                <label style="font-size:12px;color:#6b7280;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="sch_wednesday_closed" onchange="toggleDayClosed('wednesday')"> Cerrado</label>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span style="font-size:13px;font-weight:600;min-width:36px;color:#374151;">Jue</span>
+                <input type="time" id="sch_thursday_open" style="padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+                <span style="color:#9ca3af;font-size:12px;">—</span>
+                <input type="time" id="sch_thursday_close" style="padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+                <label style="font-size:12px;color:#6b7280;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="sch_thursday_closed" onchange="toggleDayClosed('thursday')"> Cerrado</label>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span style="font-size:13px;font-weight:600;min-width:36px;color:#374151;">Vie</span>
+                <input type="time" id="sch_friday_open" style="padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+                <span style="color:#9ca3af;font-size:12px;">—</span>
+                <input type="time" id="sch_friday_close" style="padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+                <label style="font-size:12px;color:#6b7280;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="sch_friday_closed" onchange="toggleDayClosed('friday')"> Cerrado</label>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span style="font-size:13px;font-weight:600;min-width:36px;color:#374151;">Sáb</span>
+                <input type="time" id="sch_saturday_open" style="padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+                <span style="color:#9ca3af;font-size:12px;">—</span>
+                <input type="time" id="sch_saturday_close" style="padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+                <label style="font-size:12px;color:#6b7280;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="sch_saturday_closed" onchange="toggleDayClosed('saturday')"> Cerrado</label>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span style="font-size:13px;font-weight:600;min-width:36px;color:#374151;">Dom</span>
+                <input type="time" id="sch_sunday_open" style="padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+                <span style="color:#9ca3af;font-size:12px;">—</span>
+                <input type="time" id="sch_sunday_close" style="padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+                <label style="font-size:12px;color:#6b7280;display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="sch_sunday_closed" onchange="toggleDayClosed('sunday')"> Cerrado</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- IMÁGENES DE LA TIENDA -->
+        <div class="form-col-full">
+          <label style="font-size:13px;font-weight:700;color:#374151;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+            <i class="fas fa-images" style="color:#16a34a"></i> Imágenes de la tienda <span style="color:#9ca3af;font-weight:400;font-size:12px;">(máx. 5 fotos)</span>
+          </label>
+          <div id="currentStoreImages" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"></div>
+          <div id="storeImgDropzone"
+            onclick="document.getElementById('storeImgInput').click()"
+            ondragover="event.preventDefault();this.style.borderColor='#16a34a'"
+            ondragleave="this.style.borderColor='#e5e7eb'"
+            ondrop="handleStoreImgDrop(event)"
+            style="border:2px dashed #e5e7eb;border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:.2s;background:#fafafa;">
+            <i class="fas fa-cloud-upload-alt" style="font-size:28px;color:#9ca3af;margin-bottom:8px;display:block;"></i>
+            <p style="font-size:13px;color:#6b7280;margin:0;">Haz clic o arrastra fotos aquí</p>
+            <p style="font-size:11px;color:#9ca3af;margin-top:4px;">JPG, PNG, WEBP · Máx 5MB por imagen</p>
+          </div>
+          <input type="file" id="storeImgInput" accept="image/*" multiple style="display:none" onchange="handleStoreImgSelect(this.files)">
+          <div id="storeImgPreview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
+        </div>
+
+        <div class="form-col-full"><button class="btn-login verde" onclick="saveMyStore()" id="btnSaveStore"><i class="fas fa-save"></i> Guardar tienda en el mapa</button></div>
+      </div>
+    </div>
+
+    <!-- TAB PRODUCTOS -->
+    <div class="tab-content" id="tabProducts">
+      <div id="storeWarning" style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:12px;font-size:13px;color:#d97706;margin-bottom:14px;display:none">
+        <i class="fas fa-exclamation-triangle"></i> Primero debes registrar tu tienda en el mapa desde la pestaña <strong>Mi Tienda</strong>.
+      </div>
+      <div class="section-title"><i class="fas fa-plus-circle" style="color:#16a34a"></i> Agregar producto</div>
+      <div class="product-form">
+        <div class="form-group"><label>Nombre</label><input type="text" id="pName" placeholder="Ej: Tenis Nike"></div>
+        <div class="form-group"><label>Precio (COP)</label><input type="number" id="pPrice" placeholder="120000"></div>
+        <div class="form-group"><label>Categoría</label>
+          <select id="pCategory"><option value="">Seleccionar...</option><option value="calzado">Calzado</option><option value="ropa">Ropa</option><option value="comida">Comida</option><option value="tecnologia">Tecnología</option><option value="hogar">Hogar</option><option value="belleza">Belleza</option><option value="deporte">Deporte</option></select>
+        </div>
+        <div class="form-group"><label>Imagen (URL)</label><input type="text" id="pImage" placeholder="https://..."></div>
+        <div class="form-group form-col-full"><label>Descripción</label><input type="text" id="pDesc" placeholder="Descripción del producto"></div>
+        <div class="form-col-full"><button class="btn-login verde" onclick="addProduct()"><i class="fas fa-plus"></i> Agregar</button></div>
+      </div>
+      <div class="section-title" style="margin-top:24px"><i class="fas fa-list" style="color:#3b82f6"></i> Mis productos</div>
+      <div id="productList"><p style="color:#9ca3af;font-size:14px">Cargando productos...</p></div>
+    </div>
+
+    <!-- TAB VIDEOS -->
+    <div class="tab-content" id="tabVideosEmp">
+      <div class="section-title"><i class="fas fa-upload" style="color:#f59e0b"></i> Subir video</div>
+      <div class="product-form">
+        <div class="form-group form-col-full">
+          <label>Archivo de video</label>
+          <input type="file" id="vFile" accept="video/*" style="width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;background:#fafafa">
+        </div>
+        <div class="form-group form-col-full">
+          <label>Descripción del video</label>
+          <input type="text" id="vCaption" placeholder="Muestra tus productos en acción...">
+        </div>
+        <div class="form-col-full">
+          <button class="btn-login amarillo" onclick="uploadVideo()" id="btnUploadVideo"><i class="fas fa-upload"></i> Subir video</button>
+        </div>
+        <div id="videoUploadProgress" style="display:none;width:100%;margin-top:12px">
+          <div style="background:#e5e7eb;border-radius:20px;height:10px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.1)">
+            <div id="videoProgressBar" style="background:linear-gradient(90deg,#16a34a,#22c55e,#4ade80);height:10px;border-radius:20px;width:0%;transition:width 0.25s ease;box-shadow:0 0 8px rgba(34,197,94,0.5)"></div>
+          </div>
+          <p style="font-size:12px;color:#16a34a;font-weight:600;margin-top:6px;display:flex;align-items:center;gap:6px" id="videoProgressText"><i class="fas fa-circle-notch fa-spin"></i> Preparando...</p>
+        </div>
+      </div>
+      <div class="section-title" style="margin-top:24px"><i class="fas fa-video" style="color:#f59e0b"></i> Mis videos</div>
+      <div id="myVideosList"><p style="color:#9ca3af;font-size:14px">Cargando videos...</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL ADMIN -->
+<div class="screen" id="screenAdmin">
+  <div class="dashboard">
+    <div class="dash-header">
+      <div class="avatar admin">🛡️</div>
+      <div class="dash-header-info">
+        <h2>Super Admin</h2>
+        <p>Panel de administración</p>
+        <span class="role-badge admin">🛡️ Super Admin</span>
+      </div>
+      <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Salir</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="statUsers">—</div><div class="stat-label">Usuarios</div></div>
+      <div class="stat-card"><div class="stat-num" id="statCompanies">—</div><div class="stat-label">Empresas</div></div>
+      <div class="stat-card"><div class="stat-num" id="statProducts">—</div><div class="stat-label">Productos</div></div>
+      <div class="stat-card"><div class="stat-num" id="statVideos">—</div><div class="stat-label">Videos</div></div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('tabAdminUsers',this)"><i class="fas fa-users"></i> Usuarios</div>
+      <div class="tab" onclick="switchTab('tabAdminProducts',this);loadFlaggedProducts()"><i class="fas fa-box"></i> Productos</div>
+      <div class="tab" onclick="switchTab('tabAdminVideos',this);loadFlaggedVideos()"><i class="fas fa-video"></i> Videos</div>
+      <div class="tab" onclick="switchTab('tabAdminForum',this);loadFlaggedPosts()"><i class="fas fa-comments"></i> Foro</div>
+    </div>
+    <div class="tab-content active" id="tabAdminUsers">
+      <div class="section-title"><i class="fas fa-users" style="color:#3b82f6"></i> Todos los usuarios</div>
+      <div id="adminUsersList"><p style="color:#9ca3af;font-size:14px">Cargando...</p></div>
+    </div>
+    <div class="tab-content" id="tabAdminProducts">
+      <div class="section-title"><i class="fas fa-box" style="color:#f59e0b"></i> Productos publicados</div>
+      <div id="adminProductsList"><p style="color:#9ca3af;font-size:14px">Cargando...</p></div>
+    </div>
+    <div class="tab-content" id="tabAdminVideos">
+      <div class="section-title"><i class="fas fa-video" style="color:#ef4444"></i> Videos publicados</div>
+      <div id="adminVideosList"><p style="color:#9ca3af;font-size:14px">Cargando...</p></div>
+    </div>
+    <div class="tab-content" id="tabAdminForum">
+      <div class="section-title"><i class="fas fa-comments" style="color:#16a34a"></i> Publicaciones del foro</div>
+      <div id="adminForumList"><p style="color:#9ca3af;font-size:14px">Cargando...</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL USUARIO -->
+<div class="modal-bg" id="modalUser">
+  <div class="modal">
+    <button class="close-modal" onclick="closeModal('modalUser')"><i class="fas fa-times"></i></button>
+    <div class="modal-header"><div class="login-icon">👤</div><h2>Iniciar sesión</h2><div class="subtitle">Accede con tu cuenta</div></div>
+    <div class="modal-body">
+      <div id="userAlert"></div>
+      <div id="userLoginTab">
+        <div class="form-group"><label>Email</label><input type="email" id="userEmail" placeholder="tu@email.com" onkeydown="if(event.key==='Enter')loginUser()"></div>
+        <div class="form-group"><label>Contraseña</label><input type="password" id="userPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')loginUser()"></div>
+        <button class="btn-login verde" onclick="loginUser()" id="btnLoginUser"><i class="fas fa-sign-in-alt"></i> Ingresar</button>
+        <div class="divider">o</div>
+ <!-- Contenedor para el botón de Google -->
+<div id="g_id_signin" style="margin: 16px 0;"></div>
+<!-- Botón fallback manual -->
+<button class="btn-login btn-google" onclick="loginWithGoogleManual()" style="margin-top: 8px;">
+  <img src="https://www.google.com/favicon.ico" width="18"> Continuar con Google (Popup)
+</button>
+        <div class="divider">¿No tienes cuenta?</div>
+        <button class="btn-login gris" onclick="toggleRegisterUser()"><i class="fas fa-user-plus"></i> Crear cuenta nueva</button>
+      </div>
+      <div id="userRegisterTab" style="display:none">
+        <div class="form-group"><label>Nombre</label><input type="text" id="regName" placeholder="Tu nombre"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="tu@email.com"></div>
+        <div class="form-group"><label>Contraseña</label><input type="password" id="regPass" placeholder="Mínimo 6 caracteres"></div>
+        <button class="btn-login verde" onclick="registerUser()" id="btnRegUser"><i class="fas fa-user-plus"></i> Crear cuenta</button>
+        <div class="divider"></div>
+        <button class="btn-login gris" onclick="toggleRegisterUser()"><i class="fas fa-arrow-left"></i> Volver al login</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EMPRESA -->
+<div class="modal-bg" id="modalEmpresa">
+  <div class="modal">
+    <button class="close-modal" onclick="closeModal('modalEmpresa')"><i class="fas fa-times"></i></button>
+    <div class="modal-header"><div class="login-icon">🏪</div><h2>Acceso Empresa</h2><div class="subtitle">Ingresa o registra tu tienda</div></div>
+    <div class="modal-body">
+      <div id="empresaAlert"></div>
+      <div id="empLoginTab">
+        <div class="form-group"><label>Email de la empresa</label><input type="email" id="eEmail" placeholder="empresa@email.com"></div>
+        <div class="form-group"><label>Contraseña</label><input type="password" id="ePass" placeholder="••••••••" onkeydown="if(event.key==='Enter')loginEmpresa()"></div>
+        <button class="btn-login amarillo" onclick="loginEmpresa()" id="btnLoginEmp"><i class="fas fa-key"></i> Acceder al panel</button>
+        <div class="divider">¿No tienes cuenta?</div>
+        <button class="btn-login gris" onclick="toggleRegisterEmpresa()"><i class="fas fa-store"></i> Registrar mi tienda</button>
+      </div>
+      <div id="empRegisterTab" style="display:none">
+        <div class="form-group"><label>Nombre de la empresa</label><input type="text" id="eRegNombre" placeholder="Mi Tienda S.A.S"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="eRegEmail" placeholder="empresa@email.com"></div>
+        <div class="form-group"><label>Contraseña</label><input type="password" id="eRegPass" placeholder="Mínimo 6 caracteres"></div>
+        <div class="form-group"><label>NIT <span style="color:#9ca3af;font-size:11px">(opcional)</span></label><input type="text" id="eRegNit" placeholder="900123456-1"></div>
+        <div class="form-group"><label>Representante legal</label><input type="text" id="eRegLegal" placeholder="Nombre completo"></div>
+        <div class="form-group"><label>Teléfono</label><input type="text" id="eRegPhone" placeholder="3001234567"></div>
+        <div class="form-group"><label>Dirección</label><input type="text" id="eRegAddr" placeholder="Calle 10 #5-20, Ibagué"></div>
+        <button class="btn-login amarillo" onclick="registerEmpresa()" id="btnRegEmp"><i class="fas fa-store"></i> Registrar tienda</button>
+        <div class="divider"></div>
+        <button class="btn-login gris" onclick="toggleRegisterEmpresa()"><i class="fas fa-arrow-left"></i> Volver al login</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ADMIN -->
+<div class="modal-bg" id="modalAdmin">
+  <div class="modal">
+    <button class="close-modal" onclick="closeModal('modalAdmin')"><i class="fas fa-times"></i></button>
+    <div class="modal-header"><div class="login-icon">🔐</div><h2>Super Admin</h2><div class="subtitle">Área de acceso máximo</div></div>
+    <div class="modal-body">
+      <div id="adminAlert"></div>
+      <div class="alert warning"><i class="fas fa-exclamation-triangle"></i> <span id="attemptsWarning">5 intentos fallidos bloquean el acceso por 60 segundos.</span></div>
+      <div class="form-group"><label>Email</label><input type="email" id="adminEmail" placeholder="admin@storemaps.co" onkeydown="if(event.key==='Enter')loginAdmin()" autocomplete="off"></div>
+      <div class="form-group"><label>Contraseña</label><input type="password" id="adminPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')loginAdmin()" autocomplete="off"></div>
+      <button class="btn-login morado" onclick="loginAdmin()"><i class="fas fa-shield-halved"></i> Ingresar al panel</button>
+    </div>
+  </div>
+</div>
+
+<div id="blockOverlay">
+  <div style="font-size:60px;margin-bottom:12px">🔒</div>
+  <h2 style="font-size:24px;font-weight:800;margin-bottom:8px">Acceso bloqueado</h2>
+  <p style="color:rgba(255,255,255,.65);margin-bottom:16px">Demasiados intentos fallidos.</p>
+  <div id="blockCountdown">60</div>
+  <p style="color:rgba(255,255,255,.5);font-size:14px">segundos restantes</p>
+</div>
+<div id="appToast"></div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+/* ============================================================
+   STOREMAPS — API Client unificado v3.2 (CORREGIDO)
+   ============================================================ */
+const API_URL = 'https://storemaps-api.onrender.com/api';
+const TOKEN_KEY = 'sm_token';
+const USER_KEY  = 'sm_user';
+
+function getToken()  { return localStorage.getItem(TOKEN_KEY); }
+function getUser()   { try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch(e) { return null; } }
+function saveAuth(token, user) { 
+  localStorage.setItem(TOKEN_KEY, token); 
+  localStorage.setItem(USER_KEY, JSON.stringify(user)); 
+}
+function clearAuth() { 
+  localStorage.removeItem(TOKEN_KEY); 
+  localStorage.removeItem(USER_KEY); 
+}
+function isLoggedIn(){ return !!getToken(); }
+
+async function apiFetch(path, options = {}) {
+  const token = getToken();
+  const headers = { ...options.headers };
+  
+  // Solo agregar Content-Type si NO es FormData
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  
+  try {
+    const res = await fetch(API_URL + path, { ...options, headers });
+    
+    // Manejar respuesta no-JSON (errores 404, 500 HTML)
+    const contentType = res.headers.get('content-type');
+    let data;
+    
+    if (contentType && contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      const text = await res.text();
+      data = { message: text || `Error ${res.status}` };
+    }
+    
+    if (!res.ok) {
+      // Si es 401, limpiar sesión
+      if (res.status === 401) {
+        clearAuth();
+        if (!path.includes('/login')) {
+          window.location.href = '/profile.html';
+        }
+      }
+      throw new Error(data.message || `Error ${res.status}`);
+    }
+    
+    return data;
+  } catch (err) {
+    if (err.name === 'TypeError' || err.message.includes('fetch')) {
+      throw new Error('Error de conexión. Verifica tu internet.');
+    }
+    throw err;
+  }
+}
+
+// ============ AUTENTICACIÓN ============
+const Auth = {
+  async loginUser(email, password) {
+    const data = await apiFetch('/auth/login/user', { 
+      method:'POST', 
+      body: JSON.stringify({email,password}) 
+    });
+    saveAuth(data.token, {...data.user, type:'user'});
+    return data;
+  },
+  
+  async registerUser(email, password, displayName) {
+    const data = await apiFetch('/auth/register/user', { 
+      method:'POST', 
+      body: JSON.stringify({email,password,displayName}) 
+    });
+    saveAuth(data.token, {...data.user, type:'user'});
+    return data;
+  },
+  
+  // CORREGIDO: Google login más seguro
+  async loginGoogle(googleId, email, displayName, photoURL) {
+    try {
+      // Intentar login con googleId primero
+      const data = await apiFetch('/auth/login/user', { 
+        method:'POST', 
+        body: JSON.stringify({email, googleId}) 
+      });
+      saveAuth(data.token, {...data.user, type:'user'});
+      return data;
+    } catch(e) {
+      // Si falla, registrar con password aleatorio seguro
+      const randomPass = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
+      const data = await apiFetch('/auth/register/user', { 
+        method:'POST', 
+        body: JSON.stringify({
+          email, 
+          googleId, 
+          displayName, 
+          photoURL, 
+          password: randomPass
+        }) 
+      });
+      saveAuth(data.token, {...data.user, type:'user'});
+      return data;
+    }
+  },
+  
+  async loginCompany(email, password) {
+    const data = await apiFetch('/auth/login/company', { 
+      method:'POST', 
+      body: JSON.stringify({email,password}) 
+    });
+    const userType = data.userType || data.company?.type || 'company';
+    saveAuth(data.token, {...data.company, type: userType});
+    return {...data, userType};
+  },
+  
+  async registerCompany(email, password, companyName, nit, legalRep, phone, address) {
+    const data = await apiFetch('/auth/register/company', { 
+      method:'POST', 
+      body: JSON.stringify({email,password,companyName,nit,legalRep,phone,address}) 
+    });
+    saveAuth(data.token, {...data.company, type:'company'});
+    return data;
+  },
+  
+  logout() { clearAuth(); }
+};
+
+// ============ FORO ============
+const Forum = {
+  async getPosts() { 
+    return await apiFetch('/forum/posts'); 
+  },
+  
+  async createPost(title, content, category='general') {
+    return await apiFetch('/forum/posts', { 
+      method:'POST', 
+      body: JSON.stringify({type:'question',title,content,category}) 
+    });
+  },
+  
+  async likePost(id) { 
+    return await apiFetch(`/forum/posts/${id}/like`, {method:'POST'}); 
+  },
+  
+  async commentPost(id, text) { 
+    return await apiFetch(`/forum/posts/${id}/comment`, {
+      method:'POST', 
+      body:JSON.stringify({text})
+    }); 
+  },
+  
+  async deletePost(id) { 
+    return await apiFetch(`/forum/posts/${id}`, {method:'DELETE'}); 
+  }
+};
+
+// ============ PRODUCTOS ============
+const Products = {
+  async getAll(filters={}) {
+    const params = new URLSearchParams(filters).toString();
+    return await apiFetch('/products' + (params ? '?'+params : ''));
+  },
+  
+  // CORREGIDO: Filtrar por companyId en frontend
+  async getMyProducts() {
+    const user = getUser();
+    if (!user || user.type !== 'company') {
+      throw new Error('Solo empresas pueden ver sus productos');
+    }
+    // Obtener tienda de la empresa primero
+    const store = await apiFetch('/stores/my/store');
+    if (!store || !store._id) {
+      return { products: [] };
+    }
+    // Luego obtener productos de esa tienda
+    const all = await apiFetch('/products?limit=100');
+    const myProducts = (all.products || []).filter(p => 
+      p.storeId?._id === store._id || p.storeId === store._id
+    );
+    return { products: myProducts };
+  },
+  
+  async getById(id) { 
+    return await apiFetch(`/products/${id}`); 
+  },
+  
+  async delete(id) { 
+    return await apiFetch(`/products/${id}`, {method:'DELETE'}); 
+  },
+  
+  async create(productData, files = []) {
+    let body, headers = {'Authorization': `Bearer ${getToken()}`};
+    if (files && files.length > 0) {
+      // With files: use FormData
+      const fd = new FormData();
+      fd.append('data', JSON.stringify(productData));
+      files.forEach(file => fd.append('images', file));
+      body = fd;
+    } else {
+      // No files: send as JSON (simpler and more reliable)
+      headers['Content-Type'] = 'application/json';
+      body = JSON.stringify(productData);
+    }
+    const res = await fetch(API_URL+'/products', { method:'POST', headers, body });
+    const contentType = res.headers.get('content-type');
+    let data;
+    if (contentType && contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      const text = await res.text();
+      throw new Error(text || 'Error del servidor');
+    }
+    if (!res.ok) throw new Error(data.message||'Error');
+    return data;
+  }
+};
+
+// ============ TIENDAS ============
+const Stores = {
+  async getAll(lat, lng, radius = 10000) {
+    const params = new URLSearchParams({lat, lng, radius}).toString();
+    return await apiFetch('/stores?' + params);
+  },
+  
+  async getById(id) {
+    return await apiFetch(`/stores/${id}`);
+  },
+  
+  async getMyStore() {
+    return await apiFetch('/stores/my/store');
+  },
+  
+  async create(storeData, files = []) {
+    const fd = new FormData();
+    fd.append('data', JSON.stringify(storeData));
+    files.forEach(file => fd.append('images', file));
+    
+    const res = await fetch(API_URL+'/stores', {
+      method:'POST',
+      headers:{'Authorization':`Bearer ${getToken()}`},
+      body: fd
+    });
+    
+    const contentType = res.headers.get('content-type');
+    let data;
+    if (contentType && contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      const text = await res.text();
+      throw new Error(text || 'Error del servidor');
+    }
+    
+    if (!res.ok) throw new Error(data.message||'Error');
+    return data;
+  }
+};
+
+// ============ VIDEOS ============
+const Videos = {
+  async getFeed(lat, lng) { 
+    const params = lat && lng ? `?lat=${lat}&lng=${lng}` : '';
+    return await apiFetch('/videos/feed' + params); 
+  },
+  
+  async getMyVideos() {
+    return await apiFetch('/videos/my-videos');
+  },
+  
+  async upload(videoFile, caption, productId = null) {
+    const fd = new FormData();
+    fd.append('video', videoFile);
+    fd.append('caption', caption);
+    if (productId) fd.append('productId', productId);
+    
+    const res = await fetch(API_URL+'/videos', {
+      method:'POST',
+      headers:{'Authorization':`Bearer ${getToken()}`},
+      body: fd
+    });
+    
+    const contentType = res.headers.get('content-type');
+    let data;
+    if (contentType && contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      const text = await res.text();
+      throw new Error(text || 'Error del servidor');
+    }
+    
+    if (!res.ok) throw new Error(data.message||'Error');
+    return data;
+  },
+  
+  async likeVideo(id) { 
+    return await apiFetch(`/videos/${id}/like`, {method:'POST'}); 
+  },
+  
+  async commentVideo(id, text) { 
+    return await apiFetch(`/videos/${id}/comment`, {
+      method:'POST', 
+      body:JSON.stringify({text})
+    }); 
+  }
+};
+
+// ============ ADMIN/SUPERADMIN ============
+const AdminAPI = {
+  async getStats() {
+    try {
+      const [usersRes, companiesRes, productsRes, videosRes] = await Promise.all([
+        apiFetch('/auth/users/count').catch(() => 0),
+        apiFetch('/auth/companies/count').catch(() => 0),
+        apiFetch('/products/admin/count').catch(() => 0),
+        apiFetch('/videos/admin/count').catch(() => 0)
+      ]);
+      return { 
+        users: usersRes || 0, 
+        companies: companiesRes || 0, 
+        products: productsRes || 0, 
+        videos: videosRes || 0 
+      };
+    } catch(e) {
+      console.error('Error loading stats:', e);
+      return { users: 0, companies: 0, products: 0, videos: 0 };
+    }
+  },
+  
+  async getUsers() { 
+    return await apiFetch('/auth/users'); 
+  },
+  
+  async getCompanies() {
+    // Usar /auth/users que devuelve ambos
+    const all = await apiFetch('/auth/users');
+    return all.filter(u => u.type === 'company' || u.type === 'superadmin');
+  },
+  
+  async getAllStores() {
+    return await apiFetch('/stores/admin/all');
+  },
+  
+  async blockUser(id, blocked) { 
+    return await apiFetch(`/auth/users/${id}/block`, {
+      method:'PUT', 
+      body:JSON.stringify({blocked})
+    }); 
+  },
+  
+  async deleteUser(id) { 
+    return await apiFetch(`/auth/users/${id}`, {method:'DELETE'}); 
+  },
+  
+  async blockCompany(id, blocked){ 
+    return await apiFetch(`/auth/companies/${id}/block`, {
+      method:'PUT', 
+      body:JSON.stringify({blocked})
+    }); 
+  },
+  
+  async deleteCompany(id) { 
+    return await apiFetch(`/auth/companies/${id}`, {method:'DELETE'}); 
+  },
+  
+  async getFlaggedProducts() { 
+    return await apiFetch('/products/admin/flagged'); 
+  },
+  
+  async getFlaggedVideos() { 
+    return await apiFetch('/videos/admin/flagged'); 
+  },
+  
+  async getFlaggedPosts() { 
+    // El foro no tiene endpoint flagged específico, traer todos
+    return await apiFetch('/forum/posts'); 
+  },
+  
+  async deleteProduct(id) { 
+    return await apiFetch(`/products/admin/${id}`, {method:'DELETE'}); 
+  },
+  
+  async deleteVideo(id) { 
+    return await apiFetch(`/videos/admin/${id}`, {method:'DELETE'}); 
+  },
+  
+  async deletePost(id) { 
+    return await apiFetch(`/forum/posts/admin/${id}`, {method:'DELETE'}); 
+  }
+};
+
+// ============ FAVORITOS ============
+const Favorites = {
+  KEY: 'storemaps_favorites',
+  
+  get() { 
+    try { 
+      return JSON.parse(localStorage.getItem(this.KEY))||[]; 
+    } catch(e){ 
+      return []; 
+    } 
+  },
+  
+  save(favs) { 
+    localStorage.setItem(this.KEY, JSON.stringify(favs)); 
+  },
+  
+  has(id) { 
+    return this.get().some(f=>(f.id||f._id)==id); 
+  },
+  
+  toggle(product) {
+    let favs = this.get();
+    const pid = product.id||product._id;
+    if (this.has(pid)) { 
+      favs = favs.filter(f=>(f.id||f._id)!=pid); 
+      this.save(favs); 
+      return false; 
+    } else { 
+      favs.push(product); 
+      this.save(favs); 
+      return true; 
+    }
+  }
+};
+
+// ============ UTILIDADES ============
+function showToast(msg, duration=2800) {
+  let t = document.getElementById('appToast');
+  if (!t) { 
+    t = document.createElement('div'); 
+    t.id='appToast'; 
+    document.body.appendChild(t); 
+  }
+  t.textContent = msg;
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(0);background:#111827;color:white;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:600;z-index:9998;transition:.3s;opacity:1;white-space:nowrap;pointer-events:none;';
+  clearTimeout(t._t);
+  t._t = setTimeout(()=>{ 
+    t.style.opacity='0'; 
+    t.style.transform='translateX(-50%) translateY(80px)'; 
+  }, duration);
+}
+
+function timeAgo(d) {
+  const s = (Date.now()-new Date(d))/1000;
+  if (s<60) return 'hace un momento';
+  if (s<3600) return `hace ${Math.floor(s/60)} min`;
+  if (s<86400) return `hace ${Math.floor(s/3600)}h`;
+  return `hace ${Math.floor(s/86400)} días`;
+}
+
+// ============ EXPORTAR GLOBAL ============
+window.Auth = Auth;
+window.Forum = Forum;
+window.Products = Products;
+window.Stores = Stores;
+window.Videos = Videos;
+window.AdminAPI = AdminAPI;
+window.Favorites = Favorites;
+window.apiFetch = apiFetch;
+window.getToken = getToken;
+window.getUser = getUser;
+window.isLoggedIn = isLoggedIn;
+window.showToast = showToast;
+window.timeAgo = timeAgo;
+</script>
+<script>
+// ── Firebase ──────────────────────────────────────────────
+// ── Firebase ──────────────────────────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey:"AIzaSyCuVUz_qsAFODc6au2rNU-oRmYpDQnZ_Ck",
+  authDomain:"storemaps-56001.firebaseapp.com",
+  projectId:"storemaps-56001",
+  storageBucket:"storemaps-56001.firebasestorage.app",
+  messagingSenderId:"980520745566",
+  appId:"1:980520745566:web:6270257efecabc1cf1d2cf"
+};
+let fbReady=false, googleProvider=null;
+try {
+  if (typeof firebase!=='undefined') {
+    if (!firebase.apps||firebase.apps.length===0) firebase.initializeApp(FIREBASE_CONFIG);
+    googleProvider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().languageCode='es';
+    fbReady=true;
+  }
+} catch(e){ console.warn('Firebase:',e.message); }
+
+// ── Bloqueo admin ─────────────────────────────────────────
+const BLOCK_KEY='sm_adm_block', ATT_KEY='sm_adm_att', MAX_ATT=5, BLOCK_SEC=60;
+let blockInterval;
+function isBlocked(){ return Date.now()<parseInt(localStorage.getItem(BLOCK_KEY)||'0'); }
+function checkBlock(){ const u=parseInt(localStorage.getItem(BLOCK_KEY)||'0'); if(Date.now()<u) startBlockTimer(Math.ceil((u-Date.now())/1000)); }
+function startBlockTimer(sec){ const ov=document.getElementById('blockOverlay'),cd=document.getElementById('blockCountdown'); if(!ov||!cd)return; ov.classList.add('show'); cd.textContent=sec; clearInterval(blockInterval); blockInterval=setInterval(()=>{ sec--; cd.textContent=sec; if(sec<=0){clearInterval(blockInterval);ov.classList.remove('show');} },1000); }
+function recordFailedAttempt(){ let a=parseInt(localStorage.getItem(ATT_KEY)||'0')+1; localStorage.setItem(ATT_KEY,a); const l=MAX_ATT-a; if(a>=MAX_ATT){ localStorage.setItem(BLOCK_KEY,Date.now()+BLOCK_SEC*1000); localStorage.setItem(ATT_KEY,'0'); closeModal('modalAdmin'); startBlockTimer(BLOCK_SEC); return true; } document.getElementById('attemptsWarning').textContent=`⚠️ Intento fallido. Quedan ${l} intento${l!==1?'s':''}.`; return false; }
+function resetAttempts(){ localStorage.removeItem(ATT_KEY); localStorage.removeItem(BLOCK_KEY); }
+
+// ── Sesión ────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', ()=>{
+  checkBlock();
+  const u = getUser();
+  if (u && getToken()) restoreSession(u);
+  updateFavCount();
+});
+
+function restoreSession(u){
+  console.log('Restoring session:', u.type);
+  if (u.type==='user'){ 
+    setUserUI(u.displayName||u.name, u.email, u.photoURL); 
+    showScreen('screenUser'); 
+  }
+  else if (u.type==='company'){ 
+    setEmpresaUI(u.companyName||u.name, u.email, u.photoURL, u.coverURL); 
+    loadMyStore();
+    loadMyProducts(); 
+    loadMyVideos(); 
+    showScreen('screenEmpresa'); 
+  }
+  else if (u.type==='superadmin'){ 
+    loadAdminStats(); 
+    loadAdminUsers(); 
+    showScreen('screenAdmin'); 
+  }
+}
+
+// ── UI helpers ────────────────────────────────────────────
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function switchTab(id,btn){ const db=btn.closest('.dashboard'); db.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); db.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); document.getElementById(id).classList.add('active'); }
+function showAlert(id,msg,type){ const el=document.getElementById(id); if(!el)return; const icons={error:'exclamation-circle',success:'check-circle',warning:'exclamation-triangle'}; el.innerHTML=`<div class="alert ${type}"><i class="fas fa-${icons[type]||'info-circle'}"></i> ${msg}</div>`; if(type!=='success') setTimeout(()=>{el.innerHTML='';},4000); }
+function setUserUI(name,email,photo){ document.getElementById('userDisplayName').textContent=name||'Usuario'; document.getElementById('userDisplayEmail').textContent=email||''; document.getElementById('settingName').value=name||''; document.getElementById('settingEmail').value=email||''; const av=document.getElementById('userAvatarDiv'); if(photo){av.innerHTML=`<img src="${photo}">`;}else{av.textContent=(name||'U').charAt(0).toUpperCase();} }
+function setEmpresaUI(name, email, photoURL, coverURL) {
+  document.getElementById('empresaDisplayName').textContent = name || 'Mi Tienda';
+  document.getElementById('empresaDisplayEmail').textContent = email || '';
+  // Foto de perfil empresa
+  const av = document.getElementById('empresaAvatarDiv');
+  if (av) {
+    if (photoURL) { av.innerHTML = `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`; }
+    else { av.textContent = '🏪'; }
+  }
+  // Foto de portada
+  const coverImg = document.getElementById('empresaCoverImg');
+  const coverPlaceholder = document.getElementById('empresaCoverPlaceholder');
+  if (coverImg && coverURL) {
+    coverImg.src = coverURL; coverImg.style.display = 'block';
+    if (coverPlaceholder) coverPlaceholder.style.display = 'none';
+  }
+}
+
+// ── SUBIR FOTO DE PERFIL ───────────────────────────────────
+async function uploadProfilePhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const token = localStorage.getItem('token');
+  if (!token) { showToastProfile('Inicia sesión primero'); return; }
+  const formData = new FormData();
+  formData.append('photo', file);
+  try {
+    const res = await fetch(`${API_URL}/auth/upload/photo`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    });
+    if (res.ok) {
+      const data = await res.json();
+      // Actualizar avatar en pantalla
+      const avUser = document.getElementById('userAvatarDiv');
+      const avEmp  = document.getElementById('empresaAvatarDiv');
+      if (avUser) avUser.innerHTML = `<img src="${data.photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      if (avEmp)  avEmp.innerHTML  = `<img src="${data.photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      showToastProfile('Foto de perfil actualizada ✓');
+    } else {
+      const err = await res.json();
+      showToastProfile('Error: ' + (err.message || 'No se pudo subir'));
+    }
+  } catch (e) { console.error(e); showToastProfile('Error de conexión'); }
+  input.value = '';
+}
+
+// ── SUBIR FOTO DE PORTADA ──────────────────────────────────
+async function uploadCoverPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const token = localStorage.getItem('token');
+  if (!token) { showToastProfile('Inicia sesión primero'); return; }
+  const formData = new FormData();
+  formData.append('cover', file);
+  try {
+    const res = await fetch(`${API_URL}/auth/upload/cover`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const coverImg = document.getElementById('empresaCoverImg');
+      const coverPlaceholder = document.getElementById('empresaCoverPlaceholder');
+      if (coverImg) { coverImg.src = data.coverURL; coverImg.style.display = 'block'; }
+      if (coverPlaceholder) coverPlaceholder.style.display = 'none';
+      showToastProfile('Foto de portada actualizada ✓');
+    } else {
+      const err = await res.json();
+      showToastProfile('Error: ' + (err.message || 'No se pudo subir'));
+    }
+  } catch (e) { console.error(e); showToastProfile('Error de conexión'); }
+  input.value = '';
+}
+
+function showToastProfile(msg) {
+  let t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1f2937;color:white;padding:12px 20px;border-radius:24px;font-size:14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.4);';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+function updateFavCount(){ try{document.getElementById('favCount').textContent=Favorites.get().length;}catch(e){} }
+function toggleRegisterUser(){ const l=document.getElementById('userLoginTab'),r=document.getElementById('userRegisterTab'); l.style.display=l.style.display==='none'?'block':'none'; r.style.display=r.style.display==='none'?'block':'none'; document.getElementById('userAlert').innerHTML=''; }
+function toggleRegisterEmpresa(){ const l=document.getElementById('empLoginTab'),r=document.getElementById('empRegisterTab'); l.style.display=l.style.display==='none'?'block':'none'; r.style.display=r.style.display==='none'?'block':'none'; document.getElementById('empresaAlert').innerHTML=''; }
+
+// ── LOGIN USUARIO ─────────────────────────────────────────
+async function loginUser(){
+  const email=document.getElementById('userEmail').value.trim();
+  const pass=document.getElementById('userPass').value;
+  if(!email||!pass){showAlert('userAlert','Completa todos los campos','error');return;}
+  const btn=document.getElementById('btnLoginUser'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Ingresando...';
+  try {
+    const data = await Auth.loginUser(email, pass);
+    closeModal('modalUser');
+    setUserUI(data.user.displayName, data.user.email, data.user.photoURL);
+    updateFavCount();
+    showScreen('screenUser');
+    showToast(`¡Hola, ${data.user.displayName||'Usuario'}! 👋`);
+  } catch(e){ showAlert('userAlert', e.message,'error'); }
+  finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-sign-in-alt"></i> Ingresar'; }
+}
+
+async function registerUser(){
+  const name=document.getElementById('regName').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const pass=document.getElementById('regPass').value;
+  if(!name||!email||!pass){showAlert('userAlert','Completa todos los campos','error');return;}
+  if(pass.length<6){showAlert('userAlert','Contraseña mínimo 6 caracteres','error');return;}
+  const btn=document.getElementById('btnRegUser'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Creando...';
+  try {
+    const data = await Auth.registerUser(email, pass, name);
+    closeModal('modalUser');
+    setUserUI(data.user.displayName, data.user.email, null);
+    updateFavCount();
+    showScreen('screenUser');
+    showToast(`¡Bienvenido, ${data.user.displayName}! 🎉`);
+  } catch(e){ showAlert('userAlert', e.message,'error'); }
+  finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-user-plus"></i> Crear cuenta'; }
+}
+
+// ── LOGIN GOOGLE ──────────────────────────────────────────
+// ── GOOGLE IDENTITY SERVICES (GIS) ─────────────────────────
+// Usa VITE_GOOGLE_CLIENT_ID desde variables de entorno de Vite
+const GOOGLE_CLIENT_ID = '513136442281-k5gkpcs0anmi980ff00rb7cmsvj95aka.apps.googleusercontent.com';
+
+// Inicializar Google Identity Services cuando el DOM esté listo
+window.addEventListener('load', () => {
+  if (typeof google !== 'undefined' && google.accounts) {
+    initializeGoogleSignIn();
+  } else {
+    console.log('⏳ Esperando Google Identity Services...');
+    setTimeout(initializeGoogleSignIn, 500);
+  }
+});
+
+function initializeGoogleSignIn() {
+  try {
+    // Configurar el botón de inicio de sesión
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleGoogleCredentialResponse,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+      context: 'signin'
+    });
+    
+    // Renderizar el botón en el contenedor (si existe)
+    const signInDiv = document.getElementById('g_id_signin');
+    if (signInDiv) {
+      google.accounts.id.renderButton(signInDiv, {
+        theme: 'outline',
+        size: 'large',
+        width: '100%',
+        shape: 'pill',
+        text: 'continue_with',
+        logo_alignment: 'center',
+        locale: 'es'
+      });
+    }
+    
+    console.log('✅ Google Identity Services inicializado con Client ID:', GOOGLE_CLIENT_ID.substring(0, 20) + '...');
+  } catch (error) {
+    console.error('❌ Error inicializando Google:', error);
+  }
+}
+
+// Manejar la respuesta de Google (JWT token)
+async function handleGoogleCredentialResponse(response) {
+  try {
+    showAlert('userAlert', '⏳ Verificando credenciales...', 'success');
+    
+    // Decodificar el JWT para obtener datos del usuario
+    const credential = response.credential;
+    const payload = parseJwt(credential);
+    
+    console.log('👤 Usuario de Google:', payload.email);
+    
+    // Llamar a tu backend con los datos de Google
+    const data = await Auth.loginGoogle(
+      payload.sub,      // googleId
+      payload.email,    // email
+      payload.name,     // displayName
+      payload.picture   // photoURL
+    );
+    
+    closeModal('modalUser');
+    setUserUI(payload.name, payload.email, payload.picture);
+    updateFavCount();
+    showScreen('screenUser');
+    showToast(`¡Hola, ${payload.name?.split(' ')[0] || 'Usuario'}! 👋`);
+    
+  } catch (error) {
+    console.error('Error Google Sign-In:', error);
+    showAlert('userAlert', `❌ ${error.message || 'Error al iniciar sesión con Google'}`, 'error');
+  }
+}
+
+// Función auxiliar para decodificar JWT
+function parseJwt(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error('Error decodificando JWT:', e);
+    throw new Error('Token inválido');
+  }
+}
+
+// Login manual con popup (fallback si el botón automático no funciona)
+async function loginWithGoogle(){
+  // Si GIS está disponible, el botón ya debería funcionar
+  // Esta función es fallback o para reintentar manualmente
+  
+  if (typeof google !== 'undefined' && google.accounts) {
+    // Forzar apertura del One Tap
+    google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        // One Tap no se mostró, intentar con popup manual
+        loginWithGoogleManual();
+      }
+    });
+  } else {
+    loginWithGoogleManual();
+  }
+}
+
+// Popup manual OAuth 2.0 (último recurso)
+async function loginWithGoogleManual() {
+  try {
+    showAlert('userAlert', '⏳ Abriendo ventana de Google...', 'success');
+    
+    const oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
+    const params = {
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: window.location.origin + '/profile.html',
+      response_type: 'id_token token',
+      scope: 'openid email profile',
+      nonce: Math.random().toString(36).substring(2),
+      prompt: 'select_account'
+    };
+    
+    const url = oauth2Endpoint + '?' + new URLSearchParams(params).toString();
+    const popup = window.open(url, 'googleSignIn', 'width=500,height=600,left=' + (screen.width/2 - 250) + ',top=' + (screen.height/2 - 300));
+    
+    // Polling para detectar cuando el popup cierra (simplificado)
+    const checkClosed = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(checkClosed);
+        console.log('Popup cerrado');
+      }
+    }, 500);
+    
+  } catch (error) {
+    console.error('Error popup Google:', error);
+    showAlert('userAlert', '❌ Error al abrir Google. Intenta recargar la página.', 'error');
+  }
+}
+// ── LOGIN EMPRESA ─────────────────────────────────────────
+async function loginEmpresa(){
+  const email=document.getElementById('eEmail').value.trim();
+  const pass=document.getElementById('ePass').value;
+  if(!email||!pass){showAlert('empresaAlert','Completa todos los campos','error');return;}
+  const btn=document.getElementById('btnLoginEmp'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Ingresando...';
+  try {
+    const data = await Auth.loginCompany(email, pass);
+    closeModal('modalEmpresa');
+    setEmpresaUI(data.company.companyName, data.company.email, data.company.photoURL, data.company.coverURL);
+    await loadMyStore();
+    await loadMyProducts();
+    await loadMyVideos();
+    showScreen('screenEmpresa');
+    showToast(`¡Bienvenido, ${data.company.companyName}! 🏪`);
+  } catch(e){ showAlert('empresaAlert', e.message,'error'); }
+  finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-key"></i> Acceder al panel'; }
+}
+
+async function registerEmpresa(){
+  const nombre=document.getElementById('eRegNombre').value.trim();
+  const email=document.getElementById('eRegEmail').value.trim();
+  const pass=document.getElementById('eRegPass').value;
+  const nit=document.getElementById('eRegNit').value.trim();
+  const legal=document.getElementById('eRegLegal').value.trim();
+  const phone=document.getElementById('eRegPhone').value.trim();
+  const addr=document.getElementById('eRegAddr').value.trim();
+  if(!nombre||!email||!pass||!legal||!phone||!addr){showAlert('empresaAlert','Completa todos los campos','error');return;}
+  const btn=document.getElementById('btnRegEmp'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Registrando...';
+  try {
+    const data = await Auth.registerCompany(email,pass,nombre,nit,legal,phone,addr);
+    closeModal('modalEmpresa');
+    setEmpresaUI(data.company.companyName, data.company.email, data.company.photoURL, data.company.coverURL);
+    showScreen('screenEmpresa');
+    showToast(`¡Tienda registrada! 🎉`);
+  } catch(e){ showAlert('empresaAlert', e.message,'error'); }
+  finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-store"></i> Registrar tienda'; }
+}
+
+// ── LOGIN ADMIN ───────────────────────────────────────────
+async function loginAdmin(){
+  if(isBlocked()){closeModal('modalAdmin');checkBlock();return;}
+  const email=document.getElementById('adminEmail').value.trim();
+  const pass=document.getElementById('adminPass').value;
+  if(!email||!pass){showAlert('adminAlert','Completa todos los campos','error');return;}
+  try {
+    const data = await Auth.loginCompany(email, pass);
+    console.log('Admin login response:', data);
+    if(data.userType==='superadmin' || data.company?.type==='superadmin'){
+      resetAttempts();
+      closeModal('modalAdmin');
+      await loadAdminStats();
+      await loadAdminUsers();
+      showScreen('screenAdmin');
+      showToast('🛡️ Bienvenido, Super Admin');
+    } else {
+      const blocked = recordFailedAttempt();
+      if(!blocked) showAlert('adminAlert','No tienes permisos de administrador','error');
+    }
+  } catch(e){
+    const blocked = recordFailedAttempt();
+    if(!blocked) showAlert('adminAlert', e.message,'error');
+  }
+}
+
+// ── LOGOUT ────────────────────────────────────────────────
+function logout(){
+  // Cerrar sesión de Google Identity Services
+  if (typeof google !== 'undefined' && google.accounts) {
+    google.accounts.id.disableAutoSelect();
+  }
+  
+  // Limpiar TODO el estado de la sesión anterior
+  Auth.logout();
+  
+  // Limpiar campos del panel empresa para que no queden datos del anterior usuario
+  clearEmpresaPanel();
+  
+  showScreen('screenRoles');
+  showToast('Sesión cerrada');
+}
+
+function clearEmpresaPanel() {
+  // Limpiar formulario tienda
+  ['sName','sPhone','sAddress','sDesc','sLat','sLng'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const sCat = document.getElementById('sCategory');
+  if (sCat) sCat.selectedIndex = 0;
+  const coordsDisplay = document.getElementById('coordsDisplay');
+  if (coordsDisplay) coordsDisplay.innerHTML = '📍 Haz clic en el mapa para seleccionar la ubicación';
+  const storeStatus = document.getElementById('storeStatus');
+  if (storeStatus) storeStatus.innerHTML = '';
+  
+  // Limpiar contadores
+  ['prodCount','vidCount'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '0';
+  });
+  
+  // Limpiar listas
+  ['productList','myVideosList'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
+  
+  // Limpiar horario
+  ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].forEach(day => {
+    const openEl = document.getElementById('sch_' + day + '_open');
+    const closeEl = document.getElementById('sch_' + day + '_close');
+    const closedEl = document.getElementById('sch_' + day + '_closed');
+    if (openEl) openEl.value = '';
+    if (closeEl) closeEl.value = '';
+    if (closedEl) closedEl.checked = false;
+  });
+
+  // Destruir mapa de tienda si existe
+  if (storeMapInstance) {
+    try { storeMapInstance.remove(); } catch(e) {}
+    storeMapInstance = null;
+    storeMarker = null;
+  }
+  myStoreId = null;
+  
+  // Limpiar panel usuario también
+  const settingName = document.getElementById('settingName');
+  if (settingName) settingName.value = '';
+}
+// ── MI TIENDA ─────────────────────────────────────────────
+let storeMapInstance = null;
+let storeMarker = null;
+let myStoreId = null;
+
+async function loadMyStore() {
+  try {
+    const store = await Stores.getMyStore();
+    myStoreId = store._id;
+    // Fill form with existing data
+    document.getElementById('sName').value = store.name || '';
+    storeImgFiles = []; renderStoreImgPreview(); showCurrentStoreImages(store.images || []);
+    document.getElementById('sPhone').value = store.phone || '';
+    document.getElementById('sCategory').value = store.category || '';
+    document.getElementById('sAddress').value = store.location?.address || '';
+    document.getElementById('sDesc').value = store.description || '';
+    const lat = store.location?.coordinates?.[1];
+    const lng = store.location?.coordinates?.[0];
+    if (lat && lng) {
+      document.getElementById('sLat').value = lat;
+      document.getElementById('sLng').value = lng;
+      document.getElementById('coordsDisplay').innerHTML =
+        '<span style="color:#16a34a;font-weight:600">✅ Ubicación guardada: ' + lat.toFixed(5) + ', ' + lng.toFixed(5) + '</span>';
+    }
+    if (store.schedule) fillScheduleForm(store.schedule);
+    document.getElementById('storeStatus').innerHTML = `<div style="background:#dcfce7;border:1px solid #bbf7d0;border-radius:10px;padding:10px;font-size:13px;color:#16a34a"><i class="fas fa-check-circle"></i> Tu tienda ya está registrada en el mapa. Puedes actualizar los datos.</div>`;
+    initStoreMap(lat || 4.4447, lng || -75.2424);
+  } catch(e) {
+    myStoreId = null;
+    document.getElementById('storeStatus').innerHTML = `<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:10px;font-size:13px;color:#d97706"><i class="fas fa-exclamation-triangle"></i> Aún no tienes tienda en el mapa. ¡Regístrala aquí!</div>`;
+    initStoreMap(4.4447, -75.2424);
+  }
+}
+
+function initStoreMap(lat, lng) {
+  setTimeout(() => {
+    if (storeMapInstance) { storeMapInstance.remove(); storeMapInstance = null; }
+    storeMapInstance = L.map('storeMap').setView([lat, lng], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(storeMapInstance);
+    if (document.getElementById('sLat').value) {
+      storeMarker = L.marker([lat, lng]).addTo(storeMapInstance).bindPopup('Tu tienda').openPopup();
+    }
+    storeMapInstance.on('click', function(e) {
+      const { lat, lng } = e.latlng;
+      document.getElementById('sLat').value = lat;
+      document.getElementById('sLng').value = lng;
+      document.getElementById('coordsDisplay').textContent = `📍 Ubicación seleccionada: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      if (storeMarker) storeMapInstance.removeLayer(storeMarker);
+      storeMarker = L.marker([lat, lng]).addTo(storeMapInstance).bindPopup('Tu tienda').openPopup();
+    });
+  }, 100);
+}
+
+function useMyLocation() {
+  const btn = document.querySelector('[onclick="useMyLocation()"]');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Obteniendo...'; }
+
+  const applyLocation = (lat, lng) => {
+    document.getElementById('sLat').value = lat;
+    document.getElementById('sLng').value = lng;
+    document.getElementById('coordsDisplay').innerHTML =
+      '<span style="color:#16a34a;font-weight:600">✅ Ubicación: ' + lat.toFixed(5) + ', ' + lng.toFixed(5) + '</span>';
+    if (storeMapInstance) {
+      storeMapInstance.setView([lat, lng], 17);
+      if (storeMarker) storeMapInstance.removeLayer(storeMarker);
+      storeMarker = L.marker([lat, lng]).addTo(storeMapInstance).bindPopup('<b>📍 Tu tienda aquí</b>').openPopup();
+    }
+    fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lng + '&format=json')
+      .then(r => r.json()).then(d => {
+        if (d && d.address) {
+          const p = d.address;
+          const addr = [p.road, p.house_number, p.city || p.town || p.municipality].filter(Boolean).join(' ');
+          if (addr && !document.getElementById('sAddress').value) document.getElementById('sAddress').value = addr;
+        }
+      }).catch(() => {});
+    showToast('✅ Ubicación obtenida');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-crosshairs"></i> Usar mi ubicación actual'; }
+  };
+
+  const fallbackToIP = () => {
+    // Usar IP geolocation como fallback cuando GPS está bloqueado
+    fetch('https://ipapi.co/json/')
+      .then(r => r.json())
+      .then(d => {
+        if (d && d.latitude) {
+          applyLocation(parseFloat(d.latitude), parseFloat(d.longitude));
+          showToast('📍 Ubicación aproximada por IP');
+        } else {
+          if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-crosshairs"></i> Usar mi ubicación actual'; }
+          showToast('❌ No se pudo obtener la ubicación');
+        }
+      }).catch(() => {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-crosshairs"></i> Usar mi ubicación actual'; }
+      });
+  };
+
+  if (!navigator.geolocation) { fallbackToIP(); return; }
+
+  navigator.geolocation.getCurrentPosition(
+    pos => applyLocation(pos.coords.latitude, pos.coords.longitude),
+    () => fallbackToIP(),
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+  );
+}
+
+async function geocodeAddress() {
+  const address = document.getElementById('sAddress').value.trim();
+  if (!address) { showToast('⚠️ Escribe una dirección primero'); return; }
+
+  const coordsDisplay = document.getElementById('coordsDisplay');
+  coordsDisplay.innerHTML = '<span style="color:#3b82f6"><i class="fas fa-spinner fa-spin"></i> Buscando dirección...</span>';
+
+  try {
+    const query = encodeURIComponent(address + ', Colombia');
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`);
+    const data = await res.json();
+
+    if (!data || data.length === 0) {
+      coordsDisplay.innerHTML = '<span style="color:#ef4444">❌ No se encontró la dirección. Selecciona en el mapa.</span>';
+      return;
+    }
+
+    const lat = parseFloat(data[0].lat);
+    const lng = parseFloat(data[0].lon);
+    document.getElementById('sLat').value = lat;
+    document.getElementById('sLng').value = lng;
+    coordsDisplay.innerHTML = '<span style="color:#16a34a;font-weight:600">✅ Dirección encontrada: ' + lat.toFixed(5) + ', ' + lng.toFixed(5) + '</span>';
+
+    if (storeMapInstance) {
+      storeMapInstance.setView([lat, lng], 17);
+      if (storeMarker) storeMapInstance.removeLayer(storeMarker);
+      storeMarker = L.marker([lat, lng]).addTo(storeMapInstance).bindPopup('<b>📍 Tu tienda aquí</b>').openPopup();
+    }
+    showToast('✅ Dirección ubicada en el mapa');
+  } catch(e) {
+    coordsDisplay.innerHTML = '<span style="color:#ef4444">❌ Error al buscar. Selecciona en el mapa.</span>';
+  }
+}
+
+// Archivos de imágenes seleccionados para la tienda
+let storeImgFiles = [];
+
+function handleStoreImgSelect(files) {
+  const remaining = 5 - storeImgFiles.length;
+  const toAdd = Array.from(files).slice(0, remaining);
+  toAdd.forEach(f => {
+    if (f.size > 5 * 1024 * 1024) { showToast('⚠️ ' + f.name + ' supera 5MB'); return; }
+    storeImgFiles.push(f);
+  });
+  renderStoreImgPreview();
+  // Reset input so same file can be re-selected
+  document.getElementById('storeImgInput').value = '';
+}
+
+function handleStoreImgDrop(e) {
+  e.preventDefault();
+  document.getElementById('storeImgDropzone').style.borderColor = '#e5e7eb';
+  handleStoreImgSelect(e.dataTransfer.files);
+}
+
+function renderStoreImgPreview() {
+  const container = document.getElementById('storeImgPreview');
+  container.innerHTML = '';
+  storeImgFiles.forEach((file, i) => {
+    const url = URL.createObjectURL(file);
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:relative;width:80px;height:80px;border-radius:10px;overflow:hidden;border:2px solid #16a34a;';
+    wrapper.innerHTML = `
+      <img src="${url}" style="width:100%;height:100%;object-fit:cover;">
+      <button onclick="removeStoreImg(${i})" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.6);color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;">✕</button>
+      ${i===0 ? '<span style="position:absolute;bottom:0;left:0;right:0;background:rgba(22,163,74,0.85);color:white;font-size:9px;font-weight:700;text-align:center;padding:2px;">PORTADA</span>' : ''}
+    `;
+    container.appendChild(wrapper);
+  });
+  const dropzone = document.getElementById('storeImgDropzone');
+  if (dropzone) dropzone.style.display = storeImgFiles.length >= 5 ? 'none' : 'block';
+}
+
+function removeStoreImg(index) {
+  storeImgFiles.splice(index, 1);
+  renderStoreImgPreview();
+}
+
+function showCurrentStoreImages(images) {
+  const container = document.getElementById('currentStoreImages');
+  if (!container || !images || !images.length) return;
+  container.innerHTML = '<p style="font-size:12px;color:#6b7280;width:100%;margin-bottom:6px;">Imágenes actuales (subir nuevas las reemplazará):</p>' +
+    images.map(src => `<img src="${src}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1.5px solid #e5e7eb;" onerror="this.style.display='none'">`).join('');
+}
+
+async function saveMyStore() {
+  const name = document.getElementById('sName').value.trim();
+  const phone = document.getElementById('sPhone').value.trim();
+  const category = document.getElementById('sCategory').value;
+  const address = document.getElementById('sAddress').value.trim();
+  const desc = document.getElementById('sDesc').value.trim();
+  const lat = parseFloat(document.getElementById('sLat').value);
+  const lng = parseFloat(document.getElementById('sLng').value);
+
+  if (!name || !category || !phone) { showToast('⚠️ Nombre, categoría y teléfono son obligatorios'); return; }
+  if (!lat || !lng) { showToast('⚠️ Debes seleccionar la ubicación en el mapa'); return; }
+
+  const btn = document.getElementById('btnSaveStore');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+  const schedule = getScheduleFromForm();
+  const storeData = {
+    name, phone, category, description: desc,
+    location: { type: 'Point', coordinates: [lng, lat], address },
+    schedule,
+    keepExistingImages: storeImgFiles.length === 0  // conservar imágenes actuales si no se suben nuevas
+  };
+
+  try {
+    const fd = new FormData();
+    fd.append('data', JSON.stringify(storeData));
+    storeImgFiles.forEach(file => fd.append('images', file));
+
+    const method = myStoreId ? 'PUT' : 'POST';
+    const url = myStoreId ? `${API_URL}/stores/${myStoreId}` : `${API_URL}/stores`;
+
+    const res = await fetch(url, {
+      method,
+      headers: { 'Authorization': `Bearer ${getToken()}` },
+      body: fd
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || 'Error al guardar tienda');
+
+    storeImgFiles = [];
+    renderStoreImgPreview();
+    showToast('✅ Tienda guardada en el mapa');
+    loadMyStore();
+    document.getElementById('storeWarning').style.display = 'none';
+  } catch(e) { showToast('❌ ' + e.message); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Guardar tienda en el mapa'; }
+}
+
+// ── HORARIO HELPERS ───────────────────────────────────────
+const SCHEDULE_DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+
+function getScheduleFromForm() {
+  const schedule = {};
+  SCHEDULE_DAYS.forEach(day => {
+    const closedEl = document.getElementById('sch_' + day + '_closed');
+    const openEl   = document.getElementById('sch_' + day + '_open');
+    const closeEl  = document.getElementById('sch_' + day + '_close');
+    if (!closedEl) return;
+    schedule[day] = closedEl.checked
+      ? { open: '', close: '' }
+      : { open: openEl ? openEl.value : '', close: closeEl ? closeEl.value : '' };
+  });
+  return schedule;
+}
+
+function fillScheduleForm(schedule) {
+  SCHEDULE_DAYS.forEach(day => {
+    const s = schedule[day];
+    if (!s) return;
+    const openEl   = document.getElementById('sch_' + day + '_open');
+    const closeEl  = document.getElementById('sch_' + day + '_close');
+    const closedEl = document.getElementById('sch_' + day + '_closed');
+    if (openEl)  openEl.value  = s.open  || '';
+    if (closeEl) closeEl.value = s.close || '';
+    if (closedEl) {
+      closedEl.checked = (!s.open && !s.close);
+      toggleDayClosed(day);
+    }
+  });
+}
+
+function toggleDayClosed(day) {
+  const closedEl = document.getElementById('sch_' + day + '_closed');
+  const openEl   = document.getElementById('sch_' + day + '_open');
+  const closeEl  = document.getElementById('sch_' + day + '_close');
+  if (!closedEl || !openEl || !closeEl) return;
+  const closed = closedEl.checked;
+  openEl.disabled  = closed;
+  closeEl.disabled = closed;
+  openEl.style.opacity  = closed ? '0.35' : '1';
+  closeEl.style.opacity = closed ? '0.35' : '1';
+  if (closed) { openEl.value = ''; closeEl.value = ''; }
+}
+
+// ── VIDEOS ────────────────────────────────────────────────
+function uploadVideo() {
+  const file = document.getElementById('vFile').files[0];
+  const caption = document.getElementById('vCaption').value.trim();
+  if (!file) { showToast('⚠️ Selecciona un video'); return; }
+  if (!caption) { showToast('⚠️ Escribe una descripción'); return; }
+
+  const btn = document.getElementById('btnUploadVideo');
+  const progressWrap = document.getElementById('videoUploadProgress');
+  const progressBar = document.getElementById('videoProgressBar');
+  const progressText = document.getElementById('videoProgressText');
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
+  progressWrap.style.display = 'block';
+  progressBar.style.width = '0%';
+  progressText.textContent = 'Preparando...';
+
+  const fd = new FormData();
+  fd.append('video', file);
+  fd.append('caption', caption);
+
+  const xhr = new XMLHttpRequest();
+
+  xhr.upload.addEventListener('progress', (e) => {
+    if (e.lengthComputable) {
+      const pct = Math.round((e.loaded / e.total) * 100);
+      progressBar.style.width = pct + '%';
+      progressText.textContent = `Subiendo... ${pct}%`;
+    }
+  });
+
+  xhr.addEventListener('load', () => {
+    try {
+      const data = JSON.parse(xhr.responseText);
+      if (xhr.status >= 200 && xhr.status < 300) {
+        progressBar.style.width = '100%';
+        progressText.textContent = '✅ ¡Video subido!';
+        setTimeout(() => {
+          progressWrap.style.display = 'none';
+          progressBar.style.width = '0%';
+        }, 1500);
+        document.getElementById('vFile').value = '';
+        document.getElementById('vCaption').value = '';
+        showToast('✅ Video subido exitosamente');
+        loadMyVideos();
+      } else {
+        throw new Error(data.message || 'Error al subir');
+      }
+    } catch(e) {
+      progressWrap.style.display = 'none';
+      showToast('❌ ' + e.message);
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-upload"></i> Subir video';
+  });
+
+  xhr.addEventListener('error', () => {
+    progressWrap.style.display = 'none';
+    showToast('❌ Error de conexión al subir el video');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-upload"></i> Subir video';
+  });
+
+  xhr.open('POST', API_URL + '/videos');
+  xhr.setRequestHeader('Authorization', 'Bearer ' + getToken());
+  xhr.send(fd);
+}
+
+// ── EMPRESA: PRODUCTOS ────────────────────────────────────
+async function loadMyProducts(){
+  try {
+    const res = await Products.getMyProducts();
+    const list = document.getElementById('productList');
+    const items = res.products || res || [];
+    document.getElementById('prodCount').textContent = items.length;
+    document.getElementById('storeWarning').style.display = 'none';
+    if(!items.length){ list.innerHTML='<p style="color:#9ca3af;font-size:14px">No tienes productos aún.</p>'; return; }
+    list.innerHTML = items.map(p=>`
+      <div class="product-item" id="prod-${p._id}">
+        <img src="${p.images?.[0]||'https://via.placeholder.com/56'}" onerror="this.src='https://via.placeholder.com/56'">
+        <div class="product-item-info"><h4>${p.name}</h4><p>$${parseInt(p.price).toLocaleString('es-CO')} · ${p.category||''}</p></div>
+        <button class="btn-delete" onclick="deleteProduct('${p._id}')"><i class="fas fa-trash"></i></button>
+      </div>`).join('');
+  } catch(e){ 
+    console.error('Error loading products:', e);
+    if (e.message.includes('tienda')) {
+      document.getElementById('storeWarning').style.display = 'block';
+      document.getElementById('productList').innerHTML = '';
+    } else {
+      document.getElementById('productList').innerHTML=`<p style="color:#ef4444;font-size:13px">${e.message}</p>`;
+    }
+  }
+}
+
+async function addProduct(){
+  const name=document.getElementById('pName').value.trim();
+  const price=document.getElementById('pPrice').value;
+  const cat=document.getElementById('pCategory').value;
+  const img=document.getElementById('pImage').value.trim();
+  const desc=document.getElementById('pDesc').value.trim();
+  if(!name||!price||!cat){showToast('⚠️ Nombre, precio y categoría son obligatorios');return;}
+  try {
+    const productData = {name, price:parseInt(price), category:cat, description:desc, images: img?[img]:[]};
+    await Products.create(productData);
+    ['pName','pPrice','pImage','pDesc'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('pCategory').selectedIndex=0;
+    showToast('✅ Producto agregado');
+    loadMyProducts();
+  } catch(e){ showToast('❌ '+e.message); }
+}
+
+async function deleteProduct(id){
+  if(!confirm('¿Eliminar este producto?'))return;
+  try { 
+    await Products.delete(id); 
+    document.getElementById('prod-'+id)?.remove(); 
+    showToast('🗑️ Eliminado'); 
+    loadMyProducts(); 
+  }
+  catch(e){ showToast('❌ '+e.message); }
+}
+
+async function loadMyVideos(){
+  try {
+    const videos = await Videos.getMyVideos();
+    document.getElementById('vidCount').textContent = videos.length || 0;
+    const list = document.getElementById('myVideosList');
+    if(!videos || !videos.length){ list.innerHTML='<p style="color:#9ca3af;font-size:14px">No tienes videos aún.</p>'; return; }
+    list.innerHTML = videos.map(v=>`
+      <div class="product-item" id="vid-${v._id}">
+        <div style="width:56px;height:56px;background:#1a1a2e;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;overflow:hidden;">
+          ${v.thumbnail ? `<img src="${v.thumbnail}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" onerror="this.style.display='none';this.parentNode.innerHTML='🎬'">` : '🎬'}
+        </div>
+        <div class="product-item-info">
+          <h4>${v.caption||'Sin título'}</h4>
+          <p>${v.likes||0} likes · ${v.comments?.length||0} comentarios</p>
+          <p style="font-size:11px;color:#9ca3af;">${new Date(v.createdAt).toLocaleDateString('es-CO')}</p>
+        </div>
+        <button class="btn-delete" onclick="deleteMyVideo('${v._id}')" title="Eliminar video">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>`).join('');
+  } catch(e){ 
+    console.error('Error loading videos:', e);
+    document.getElementById('myVideosList').innerHTML=`<p style="color:#9ca3af;font-size:13px">No se pudieron cargar los videos.</p>`; 
+  }
+}
+
+async function deleteMyVideo(videoId) {
+  if (!confirm('¿Seguro que quieres eliminar este video? Esta acción no se puede deshacer.')) return;
+  try {
+    const res = await fetch(API_URL + '/videos/' + videoId, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + getToken() }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Error al eliminar');
+    const el = document.getElementById('vid-' + videoId);
+    if (el) el.remove();
+    showToast('🗑️ Video eliminado');
+    const countEl = document.getElementById('vidCount');
+    if (countEl) countEl.textContent = Math.max(0, parseInt(countEl.textContent) - 1);
+  } catch(e) {
+    showToast('❌ ' + e.message);
+  }
+}
+
+
+async function saveUserProfile(){
+  const name=document.getElementById('settingName').value.trim();
+  if(!name){showToast('⚠️ Escribe tu nombre');return;}
+  try {
+    await apiFetch('/auth/user/profile',{method:'PUT',body:JSON.stringify({displayName:name})});
+    const u=getUser(); if(u){u.displayName=name; localStorage.setItem('sm_user',JSON.stringify(u));}
+    document.getElementById('userDisplayName').textContent=name;
+    showToast('✅ Perfil guardado');
+  } catch(e){ showToast('❌ '+e.message); }
+}
+
+// ── ADMIN PANEL ───────────────────────────────────────────
+async function loadAdminStats(){
+  try {
+    const s = await AdminAPI.getStats();
+    document.getElementById('statUsers').textContent = s.users || 0;
+    document.getElementById('statCompanies').textContent = s.companies || 0;
+    document.getElementById('statProducts').textContent = s.products || 0;
+    document.getElementById('statVideos').textContent = s.videos || 0;
+  } catch(e){ 
+    console.warn('Stats error:', e.message); 
+  }
+}
+
+async function loadAdminUsers(){
+  try {
+    const users = await AdminAPI.getUsers();
+    const list = document.getElementById('adminUsersList');
+    if(!users || !users.length){ list.innerHTML='<p style="color:#9ca3af">No hay usuarios.</p>'; return; }
+    list.innerHTML = `<table class="admin-table">
+      <tr><th>Nombre</th><th>Email</th><th>Tipo</th><th>Estado</th><th>Acciones</th></tr>
+      ${users.map(u=>`<tr>
+        <td>${u.displayName||u.companyName||'—'}</td>
+        <td>${u.email}</td>
+        <td><span class="badge badge-${u.type==='user'?'user':u.type==='superadmin'?'admin':'company'}">${u.type}</span></td>
+        <td>${u.isBlocked?'<span class="badge badge-blocked">Bloqueado</span>':'<span class="badge" style="background:#dcfce7;color:#16a34a">Activo</span>'}</td>
+        <td>
+          ${u.type!=='superadmin'?`<button class="btn-sm btn-sm-yellow" onclick="toggleBlockUser('${u._id}','${u.type}',${u.isBlocked})">${u.isBlocked?'Desbloquear':'Bloquear'}</button>
+          <button class="btn-sm btn-sm-red" onclick="deleteAdminUser('${u._id}','${u.type}')" style="margin-left:4px">Eliminar</button>`:'<span style="color:#9ca3af;font-size:12px">Admin</span>'}
+        </td>
+      </tr>`).join('')}
+    </table>`;
+  } catch(e){ 
+    console.error('Error loading users:', e);
+    document.getElementById('adminUsersList').innerHTML=`<p style="color:#ef4444">${e.message}</p>`; 
+  }
+}
+
+async function toggleBlockUser(id, type, blocked){
+  try {
+    if(type==='user') await AdminAPI.blockUser(id,!blocked);
+    else await AdminAPI.blockCompany(id,!blocked);
+    showToast(blocked?'✅ Usuario desbloqueado':'🔒 Usuario bloqueado');
+    loadAdminUsers();
+  } catch(e){ showToast('❌ '+e.message); }
+}
+
+async function deleteAdminUser(id, type){
+  if(!confirm('¿Eliminar permanentemente?'))return;
+  try {
+    if(type==='user') await AdminAPI.deleteUser(id);
+    else await AdminAPI.deleteCompany(id);
+    showToast('🗑️ Eliminado');
+    loadAdminUsers(); loadAdminStats();
+  } catch(e){ showToast('❌ '+e.message); }
+}
+
+async function loadFlaggedProducts(){
+  try {
+    const items = await AdminAPI.getFlaggedProducts();
+    const list = document.getElementById('adminProductsList');
+    if(!items || !items.length){ list.innerHTML='<p style="color:#9ca3af">No hay productos.</p>'; return; }
+    list.innerHTML = items.map(p=>`
+      <div class="product-item" id="ap-${p._id}">
+        <img src="${p.images?.[0]||'https://via.placeholder.com/56'}" onerror="this.src='https://via.placeholder.com/56'">
+        <div class="product-item-info"><h4>${p.name}</h4><p>${p.storeId?.name||'—'} · $${parseInt(p.price||0).toLocaleString('es-CO')}</p></div>
+        <button class="btn-delete" onclick="adminDeleteProduct('${p._id}')"><i class="fas fa-trash"></i> Eliminar</button>
+      </div>`).join('');
+  } catch(e){ 
+    console.error('Error loading products:', e);
+    document.getElementById('adminProductsList').innerHTML=`<p style="color:#ef4444">${e.message}</p>`; 
+  }
+}
+
+async function adminDeleteProduct(id){
+  if(!confirm('¿Eliminar este producto?'))return;
+  try { 
+    await AdminAPI.deleteProduct(id); 
+    document.getElementById('ap-'+id)?.remove(); 
+    showToast('🗑️ Producto eliminado'); 
+    loadAdminStats(); 
+  }
+  catch(e){ showToast('❌ '+e.message); }
+}
+
+async function loadFlaggedVideos(){
+  try {
+    const items = await AdminAPI.getFlaggedVideos();
+    const list = document.getElementById('adminVideosList');
+    if(!items || !items.length){ list.innerHTML='<p style="color:#9ca3af">No hay videos.</p>'; return; }
+    list.innerHTML = items.map(v=>`
+      <div class="product-item" id="av-${v._id}">
+        <div style="width:56px;height:56px;background:#f3f4f6;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px">🎬</div>
+        <div class="product-item-info"><h4>${v.caption||'Sin título'}</h4><p>${v.storeId?.name||'—'} · ${v.likes||0} likes</p></div>
+        <button class="btn-delete" onclick="adminDeleteVideo('${v._id}')"><i class="fas fa-trash"></i> Eliminar</button>
+      </div>`).join('');
+  } catch(e){ 
+    console.error('Error loading videos:', e);
+    document.getElementById('adminVideosList').innerHTML=`<p style="color:#ef4444">${e.message}</p>`; 
+  }
+}
+
+async function adminDeleteVideo(id){
+  if(!confirm('¿Eliminar este video?'))return;
+  try { 
+    await AdminAPI.deleteVideo(id); 
+    document.getElementById('av-'+id)?.remove(); 
+    showToast('🗑️ Video eliminado'); 
+    loadAdminStats(); 
+  }
+  catch(e){ showToast('❌ '+e.message); }
+}
+
+async function loadFlaggedPosts(){
+  try {
+    const items = await AdminAPI.getFlaggedPosts();
+    const list = document.getElementById('adminForumList');
+    if(!items || !items.length){ list.innerHTML='<p style="color:#9ca3af">No hay publicaciones.</p>'; return; }
+    list.innerHTML = items.map(p=>`
+      <div class="product-item" id="afp-${p._id}">
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600">${p.title}</div>
+          <div style="font-size:12px;color:#6b7280">${p.authorId?.displayName||'—'} · ${p.likes?.length||0} likes · ${p.comments?.length||0} comentarios</div>
+        </div>
+        <button class="btn-delete" onclick="adminDeletePost('${p._id}')"><i class="fas fa-trash"></i> Eliminar</button>
+      </div>`).join('');
+  } catch(e){ 
+    console.error('Error loading posts:', e);
+    document.getElementById('adminForumList').innerHTML=`<p style="color:#ef4444">${e.message}</p>`; 
+  }
+}
+
+async function adminDeletePost(id){
+  if(!confirm('¿Eliminar esta publicación?'))return;
+  try { 
+    await AdminAPI.deletePost(id); 
+    document.getElementById('afp-'+id)?.remove(); 
+    showToast('🗑️ Publicación eliminada'); 
+  }
+  catch(e){ showToast('❌ '+e.message); }
+}
+</script>
+<script>
+/* ============================================================
+   MASCOTA STOREMAPS — Axo el Ajolote
+   Tutorial interactivo para cada página
+   ============================================================ */
+
+(function() {
+
+  const page = location.pathname.split('/').pop() || 'index.html';
+
+  const tutorials = {
+    'index.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'Soy la mascota de Storemaps. ¡Voy a mostrarte cómo usar la app! Tócame cuando quieras ayuda.', icon: '🦎', highlight: null },
+      { title: 'Barra de navegación', text: 'Aquí arriba puedes moverte entre las secciones: Mapa, Descubrir, Favoritos, Foro, Videos y Perfil.', icon: '🗺️', highlight: '.main-menu' },
+      { title: 'Buscador', text: 'Escribe aquí el nombre de una tienda o producto para encontrarlo rápidamente en el mapa.', icon: '🔍', highlight: '.search-bar' },
+      { title: 'El Mapa', text: 'Este mapa muestra todas las tiendas de Ibagué. Los pins de colores son cada negocio. ¡Toca uno para ver info!', icon: '📍', highlight: '#map' },
+      { title: 'Mi ubicación', text: 'Toca "Mi ubicación" para centrar el mapa en donde estás y ver las tiendas más cercanas.', icon: '📡', highlight: '#btnMyLocationMap' },
+      { title: 'Filtros del mapa', text: 'Usa estos botones para filtrar las tiendas por categoría: Calzado, Ropa, Comida, etc.', icon: '🎯', highlight: '.map-section .map-filter-btn' },
+      { title: '¡Listo! 🎉', text: 'Ya conoces el Mapa. Explora las otras secciones o tócame si necesitas ayuda. ¡A comprar local!', icon: '🔥', highlight: null },
+    ],
+    'discover.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'Estás en Descubrir, donde encuentras todos los productos de las tiendas de Ibagué.', icon: '🦎', highlight: null },
+      { title: 'Filtros por categoría', text: 'Toca cualquier categoría para ver solo esos productos. ¡Puedes filtrar por Ropa, Comida, Tecnología y más!', icon: '🎯', highlight: '.filter-bar' },
+      { title: 'Buscador', text: 'Escribe el nombre de un producto o tienda aquí para buscarlo directamente.', icon: '🔍', highlight: '#searchInput' },
+      { title: 'Tarjetas de productos', text: 'Cada tarjeta muestra un producto. Toca la imagen para ver más detalles como dirección y horario.', icon: '🛍️', highlight: '.pin-card' },
+      { title: 'Botón de favorito ❤️', text: 'Toca el corazón en cualquier producto para guardarlo en Favoritos. ¡Se pone rojo al guardarlo!', icon: '❤️', highlight: '.heart-btn' },
+      { title: '¡Ya eres un experto! 🎉', text: 'Ahora sabes usar Descubrir. ¡Explora los productos y guarda tus favoritos!', icon: '🔥', highlight: null },
+    ],
+    'favorites.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'Aquí están todos los productos que guardaste con ❤️ en Descubrir.', icon: '🦎', highlight: null },
+      { title: 'Tus favoritos', text: 'Cada tarjeta es un producto que marcaste como favorito. Se guardan automáticamente en tu dispositivo.', icon: '❤️', highlight: '.fav-card' },
+      { title: 'Quitar favorito', text: 'Toca la ✕ en la esquina de cualquier tarjeta para quitarlo de favoritos.', icon: '🗑️', highlight: '.remove-btn' },
+      { title: '¡Listo! 🎉', text: 'Ve a Descubrir para agregar más productos a tus favoritos tocando el ❤️ en cada tarjeta.', icon: '🔥', highlight: null },
+    ],
+    'videos.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'Estás en Videos, donde las tiendas muestran sus productos en formato corto estilo TikTok.', icon: '🦎', highlight: null },
+      { title: 'Desliza para navegar', text: 'Desliza hacia arriba o abajo para pasar al siguiente video. ¡Cada uno es de una tienda diferente!', icon: '👆', highlight: '.videos-scroll' },
+      { title: 'Dar like ❤️', text: 'Toca el corazón para darle like al video. El contador se actualiza al instante.', icon: '❤️', highlight: '.action-btn' },
+      { title: '¡Disfruta! 🎉', text: 'Mira videos de las tiendas locales de Ibagué y descubre sus mejores productos.', icon: '🔥', highlight: null },
+    ],
+    'profile.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'En Perfil puedes entrar como Usuario, Empresa o Super Admin según tu rol.', icon: '🦎', highlight: null },
+      { title: 'Como Usuario', text: 'Inicia sesión con tu correo para ver tus favoritos y configuración personal.', icon: '👤', highlight: '.role-card.user' },
+      { title: 'Como Empresa', text: 'Las tiendas ingresan aquí para agregar productos, videos y aparecer en el mapa.', icon: '🏪', highlight: '.role-card.empresa' },
+      { title: 'Subir videos', text: 'En el panel empresa puedes subir videos con barra de progreso verde para ver el avance.', icon: '🎬', highlight: null },
+      { title: 'Super Admin', text: 'El admin revisa y modera comentarios, videos y productos del sistema.', icon: '🛡️', highlight: '.role-card.admin' },
+      { title: '¡Listo! 🎉', text: 'Elige tu rol y empieza a usar Storemaps. ¡Tócame cuando necesites ayuda!', icon: '🔥', highlight: null },
+    ],
+    'forum.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'Estás en el Foro, donde la comunidad comparte recomendaciones de tiendas de Ibagué.', icon: '🦎', highlight: null },
+      { title: 'Crear publicación', text: 'Escribe un título y tu pregunta o recomendación aquí, luego toca "Publicar".', icon: '✏️', highlight: '.new-post' },
+      { title: 'Ver publicaciones', text: 'Aquí aparecen todas las preguntas y recomendaciones de la comunidad.', icon: '💬', highlight: '#forumPosts' },
+      { title: '¡Participa! 🎉', text: 'Comparte tus tiendas favoritas y ayuda a otros a descubrir el comercio local.', icon: '🔥', highlight: null },
+    ],
+  };
+
+  const steps = tutorials[page] || tutorials['index.html'];
+  let currentStep = 0;
+  let isOpen = false;
+
+  function clearHighlight() {
+    document.querySelectorAll('.mascota-highlight').forEach(el => el.classList.remove('mascota-highlight'));
+  }
+
+  function highlightElement(selector) {
+    clearHighlight();
+    if (!selector) return;
+    const el = document.querySelector(selector);
+    if (!el) return;
+    el.classList.add('mascota-highlight');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function showStep(idx) {
+    const step = steps[idx];
+    if (!step) return;
+    document.getElementById('axo-step-icon').textContent = step.icon;
+    document.getElementById('axo-step-title').textContent = step.title;
+    document.getElementById('axo-step-text').textContent = step.text;
+    document.querySelectorAll('.axo-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+    const prevBtn = document.getElementById('axo-prev');
+    const nextBtn = document.getElementById('axo-next');
+    prevBtn.style.display = idx === 0 ? 'none' : 'flex';
+    nextBtn.textContent = idx === steps.length - 1 ? '¡Listo! 🎉' : 'Siguiente →';
+    highlightElement(step.highlight);
+    updateFace(idx, step);
+  }
+
+  function updateFace(idx, step) {
+    const eyes = document.getElementById('axo-eye-l');
+    const eyes2 = document.getElementById('axo-eye-r');
+    const mouth = document.getElementById('axo-mouth');
+    if (idx === steps.length - 1) {
+      // Cara feliz extra
+      if (eyes)  eyes.setAttribute('r', '11');
+      if (eyes2) eyes2.setAttribute('r', '11');
+      if (mouth) mouth.setAttribute('d', 'M100 118 Q118 132 136 118');
+    } else if (step.highlight) {
+      // Cara curiosa
+      if (eyes)  eyes.setAttribute('r', '10');
+      if (eyes2) eyes2.setAttribute('r', '10');
+      if (mouth) mouth.setAttribute('d', 'M104 116 Q118 124 132 116');
+    } else {
+      // Cara normal
+      if (eyes)  eyes.setAttribute('r', '10');
+      if (eyes2) eyes2.setAttribute('r', '10');
+      if (mouth) mouth.setAttribute('d', 'M106 116 Q118 126 130 116');
+    }
+  }
+
+  function openTutorial() {
+    isOpen = true;
+    currentStep = 0;
+    document.getElementById('axo-bubble').style.display = 'flex';
+    document.getElementById('axo-mascot').classList.add('axo-open');
+    showStep(0);
+  }
+
+  function closeTutorial() {
+    isOpen = false;
+    document.getElementById('axo-bubble').style.display = 'none';
+    document.getElementById('axo-mascot').classList.remove('axo-open');
+    clearHighlight();
+    const mouth = document.getElementById('axo-mouth');
+    if (mouth) mouth.setAttribute('d', 'M106 116 Q118 126 130 116');
+  }
+
+  function nextStep() {
+    if (currentStep >= steps.length - 1) { closeTutorial(); return; }
+    currentStep++;
+    showStep(currentStep);
+  }
+
+  function prevStep() {
+    if (currentStep <= 0) return;
+    currentStep--;
+    showStep(currentStep);
+  }
+
+  // ── CSS ──
+  const style = document.createElement('style');
+  style.textContent = `
+    #axo-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+      font-family: 'Inter', sans-serif;
+    }
+    #axo-bubble {
+      display: none;
+      flex-direction: column;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 0 0 2px #3b8ef8;
+      width: 285px;
+      overflow: hidden;
+      animation: axoBubbleIn .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes axoBubbleIn {
+      from { opacity:0; transform: scale(0.7) translateY(20px); }
+      to   { opacity:1; transform: scale(1) translateY(0); }
+    }
+    .axo-bubble-header {
+      background: linear-gradient(135deg, #1d6ef5, #4fa8ff);
+      padding: 14px 16px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .axo-step-icon { font-size: 22px; }
+    .axo-step-title {
+      font-size: 14px; font-weight: 700; color: white;
+      flex: 1; margin-left: 8px;
+    }
+    .axo-close {
+      background: rgba(255,255,255,0.2); border: none; color: white;
+      border-radius: 50%; width: 26px; height: 26px; cursor: pointer;
+      font-size: 14px; display: flex; align-items: center; justify-content: center;
+      transition: .2s; flex-shrink: 0;
+    }
+    .axo-close:hover { background: rgba(255,255,255,0.4); }
+    .axo-bubble-body { padding: 14px 16px; }
+    #axo-step-text { font-size: 13px; color: #374151; line-height: 1.55; }
+    .axo-dots { display:flex; gap:5px; justify-content:center; margin:10px 0 8px; }
+    .axo-dot {
+      width:7px; height:7px; border-radius:50%;
+      background:#d1d5db; transition:.2s; cursor:pointer;
+    }
+    .axo-dot.active { background:#1d6ef5; transform:scale(1.3); }
+    .axo-buttons { display:flex; gap:8px; padding:0 16px 14px; }
+    #axo-prev {
+      background:#f3f4f6; color:#374151; border:none;
+      padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600;
+      cursor:pointer; display:flex; align-items:center; gap:4px; transition:.2s;
+    }
+    #axo-prev:hover { background:#e5e7eb; }
+    #axo-next {
+      flex:1; background:linear-gradient(135deg,#1d6ef5,#4fa8ff);
+      color:white; border:none; padding:8px 14px; border-radius:10px;
+      font-size:13px; font-weight:700; cursor:pointer; transition:.2s;
+    }
+    #axo-next:hover { opacity:.9; transform:scale(1.02); }
+
+    /* Mascot */
+    #axo-mascot-wrap { position:relative; }
+    #axo-mascot {
+      width: 86px; height: 96px;
+      cursor: pointer;
+      filter: drop-shadow(0 6px 20px rgba(29,110,245,0.55));
+      transition: transform .2s;
+      animation: axoFloat 3.2s ease-in-out infinite;
+      display: block;
+    }
+    #axo-mascot:hover { transform: scale(1.13) rotate(-3deg); }
+    #axo-mascot.axo-open {
+      animation: axoBounce .45s ease;
+      filter: drop-shadow(0 6px 22px rgba(29,110,245,0.85));
+    }
+    @keyframes axoFloat {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      30%      { transform: translateY(-7px) rotate(1deg); }
+      70%      { transform: translateY(-4px) rotate(-1deg); }
+    }
+    @keyframes axoBounce {
+      0%  { transform: scale(1) rotate(0); }
+      35% { transform: scale(1.22) rotate(-6deg); }
+      65% { transform: scale(0.93) rotate(4deg); }
+      100%{ transform: scale(1) rotate(0); }
+    }
+    #axo-tooltip {
+      position: absolute;
+      bottom: 92px; right: 0;
+      background: #1d6ef5; color: white;
+      font-size: 12px; font-weight: 600;
+      padding: 6px 12px; border-radius: 20px;
+      white-space: nowrap; pointer-events: none;
+      animation: axoTooltipPop 2.2s ease 1.2s forwards;
+      opacity: 0;
+      box-shadow: 0 4px 12px rgba(29,110,245,.4);
+    }
+    #axo-tooltip::after {
+      content: ''; position: absolute;
+      bottom: -6px; right: 22px;
+      border: 6px solid transparent;
+      border-top-color: #1d6ef5; border-bottom: none;
+    }
+    @keyframes axoTooltipPop {
+      0%  { opacity:0; transform:translateY(6px); }
+      15% { opacity:1; transform:translateY(0); }
+      75% { opacity:1; }
+      100%{ opacity:0; }
+    }
+    .mascota-highlight {
+      outline: 3px solid #1d6ef5 !important;
+      outline-offset: 4px !important;
+      border-radius: 10px !important;
+      box-shadow: 0 0 0 6px rgba(29,110,245,0.15) !important;
+      transition: outline .3s, box-shadow .3s !important;
+      position: relative; z-index: 100;
+    }
+    @media(max-width:480px) {
+      #axo-container { bottom:16px; right:16px; }
+      #axo-bubble { width:252px; }
+      #axo-mascot { width:72px; height:80px; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // ── HTML — SVG ajolote mejorado ──
+  const container = document.createElement('div');
+  container.id = 'axo-container';
+  const dotsHTML = steps.map((_, i) => `<div class="axo-dot${i===0?' active':''}" onclick="axoGoTo(${i})"></div>`).join('');
+
+  container.innerHTML = `
+    <div id="axo-bubble">
+      <div class="axo-bubble-header">
+        <span class="axo-step-icon" id="axo-step-icon">🦎</span>
+        <span class="axo-step-title" id="axo-step-title">¡Hola!</span>
+        <button class="axo-close" onclick="axoClose()">✕</button>
+      </div>
+      <div class="axo-bubble-body">
+        <p id="axo-step-text"></p>
+        <div class="axo-dots">${dotsHTML}</div>
+      </div>
+      <div class="axo-buttons">
+        <button id="axo-prev" onclick="axoPrev()">← Atrás</button>
+        <button id="axo-next" onclick="axoNext()">Siguiente →</button>
+      </div>
+    </div>
+
+    <div id="axo-mascot-wrap">
+      <div id="axo-tooltip">¡Tócame para el tutorial! 👆</div>
+
+      <!-- AJOLOTE SVG MEJORADO -->
+      <svg id="axo-mascot" onclick="axoToggle()" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="axoGBody" cx="40%" cy="35%" r="60%">
+            <stop offset="0%"   stop-color="#72d4ff"/>
+            <stop offset="50%"  stop-color="#3aabf0"/>
+            <stop offset="100%" stop-color="#1560cc"/>
+          </radialGradient>
+          <radialGradient id="axoGHead" cx="38%" cy="30%" r="62%">
+            <stop offset="0%"   stop-color="#90e0ff"/>
+            <stop offset="45%"  stop-color="#4dbcf5"/>
+            <stop offset="100%" stop-color="#1a68dc"/>
+          </radialGradient>
+          <radialGradient id="axoGGill" cx="25%" cy="25%" r="75%">
+            <stop offset="0%"   stop-color="#50b8f8"/>
+            <stop offset="100%" stop-color="#0e3cb0"/>
+          </radialGradient>
+          <radialGradient id="axoGBelly" cx="50%" cy="40%" r="55%">
+            <stop offset="0%"   stop-color="#c8f0ff"/>
+            <stop offset="100%" stop-color="#7ad4ff"/>
+          </radialGradient>
+          <radialGradient id="axoGFlame" cx="50%" cy="85%" r="65%">
+            <stop offset="0%"   stop-color="#ffffff"/>
+            <stop offset="30%"  stop-color="#a8eeff"/>
+            <stop offset="65%"  stop-color="#1ab0ff"/>
+            <stop offset="100%" stop-color="#005acc" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="axoGFlame2" cx="50%" cy="80%" r="60%">
+            <stop offset="0%"   stop-color="#70e8ff"/>
+            <stop offset="55%"  stop-color="#1888ff"/>
+            <stop offset="100%" stop-color="#0040bb" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="axoGShine" cx="35%" cy="25%" r="55%">
+            <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.45"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="axoGlow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="3.5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="axoSoft" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- ═══ LLAMA AZUL ENCIMA DE LA CABEZA ═══ -->
+        <!-- Partículas -->
+        <circle cx="97"  cy="10" r="2"   fill="#88eeff" opacity=".7"/>
+        <circle cx="106" cy="5"  r="1.5" fill="#aaf4ff" opacity=".6"/>
+        <circle cx="86"  cy="14" r="1.3" fill="#60d8ff" opacity=".5"/>
+        <!-- Llama exterior -->
+        <path d="M105 40 C103 28 96 14 104 3
+                 C99 9 93 2 95 10
+                 C90 3 84 7 87 16
+                 C82 9 76 18 85 27
+                 C79 33 83 44 91 45
+                 C86 51 90 58 95 55
+                 C100 58 104 51 99 45
+                 C107 43 111 32 105 40Z"
+              fill="url(#axoGFlame2)" filter="url(#axoGlow)" opacity=".92"/>
+        <!-- Llama media -->
+        <path d="M100 38 C99 28 94 19 100 11
+                 C96 16 92 11 93 17
+                 C90 12 86 16 90 23
+                 C86 28 89 37 94 38
+                 C91 43 93 49 97 47
+                 C101 49 103 43 100 38Z"
+              fill="#4ad8ff" opacity=".88"/>
+        <!-- Llama núcleo -->
+        <path d="M97 36 C96 28 93 23 97 17
+                 C95 21 92 18 93 23
+                 C91 18 88 22 91 28
+                 C89 32 91 38 95 39
+                 C93 43 95 47 97 45
+                 C99 47 101 43 99 39
+                 C102 36 98 30 97 36Z"
+              fill="url(#axoGFlame)" opacity=".9"/>
+        <!-- Brillo llama -->
+        <ellipse cx="96" cy="32" rx="4" ry="6" fill="white" opacity=".5" filter="url(#axoSoft)"/>
+        <!-- Resplandor base llama -->
+        <ellipse cx="96" cy="46" rx="11" ry="4" fill="#60d8ff" opacity=".2"/>
+
+        <!-- ═══ BRANQUIAS IZQUIERDA ═══ -->
+        <path d="M58 84 C48 73 28 66 17 54
+                 C15 67 24 77 38 83
+                 C27 85 17 93 20 104
+                 C31 98 46 92 58 90Z"
+              fill="url(#axoGGill)" opacity=".92"/>
+        <!-- Protuberancias izquierda -->
+        <ellipse cx="18" cy="52" rx="8"   ry="6"   fill="#0e3cb0" opacity=".95"/>
+        <ellipse cx="14" cy="67" rx="7.5" ry="5.5" fill="#0e3cb0" opacity=".95"/>
+        <ellipse cx="16" cy="81" rx="7"   ry="5.5" fill="#0e3cb0" opacity=".95"/>
+        <path d="M58 84 C48 74 30 67 18 54" fill="none" stroke="#0a2a90" stroke-width="1.2" opacity=".45"/>
+
+        <!-- ═══ BRANQUIAS DERECHA ═══ -->
+        <path d="M142 84 C152 73 172 66 183 54
+                 C185 67 176 77 162 83
+                 C173 85 183 93 180 104
+                 C169 98 154 92 142 90Z"
+              fill="url(#axoGGill)" opacity=".92"/>
+        <!-- Protuberancias derecha -->
+        <ellipse cx="182" cy="52" rx="8"   ry="6"   fill="#0e3cb0" opacity=".95"/>
+        <ellipse cx="186" cy="67" rx="7.5" ry="5.5" fill="#0e3cb0" opacity=".95"/>
+        <ellipse cx="184" cy="81" rx="7"   ry="5.5" fill="#0e3cb0" opacity=".95"/>
+        <path d="M142 84 C152 74 170 67 182 54" fill="none" stroke="#0a2a90" stroke-width="1.2" opacity=".45"/>
+
+        <!-- ═══ COLA ═══ -->
+        <path d="M88 200 C76 210 60 220 48 232
+                 C40 240 39 249 47 250
+                 C58 245 72 235 82 224
+                 C86 217 90 208 93 202Z"
+              fill="url(#axoGGill)"/>
+        <path d="M88 200 C76 210 60 220 48 232 C40 240 39 249 47 250"
+              fill="none" stroke="#0a2a90" stroke-width="1.2" opacity=".38"/>
+
+        <!-- ═══ CUERPO ═══ -->
+        <ellipse cx="100" cy="158" rx="52"  ry="55"  fill="#0a2a90" opacity=".14"/>
+        <ellipse cx="100" cy="152" rx="56"  ry="58"  fill="url(#axoGBody)"/>
+
+        <!-- ═══ CABEZA ═══ -->
+        <ellipse cx="102" cy="92"  rx="52"  ry="47"  fill="#0a2a90" opacity=".12"/>
+        <ellipse cx="100" cy="89"  rx="58"  ry="52"  fill="url(#axoGHead)"/>
+        <!-- Brillo cabeza -->
+        <ellipse cx="83"  cy="72"  rx="26"  ry="15"  fill="url(#axoGShine)" transform="rotate(-14 83 72)"/>
+
+        <!-- ═══ OJOS GRANDES EXPRESIVOS ═══ -->
+        <!-- Ojo izquierdo -->
+        <circle cx="79"  cy="88" r="13"  fill="#08186e" opacity=".28"/>
+        <circle cx="77"  cy="86" r="13"  fill="#08186e"/>
+        <circle cx="72"  cy="81" r="5"   fill="white"   opacity=".72"/>
+        <circle cx="80"  cy="90" r="2.2" fill="white"   opacity=".32"/>
+        <!-- Pupila -->
+        <circle cx="78"  cy="87" r="6"   fill="#030d3a"/>
+        <circle cx="75"  cy="84" r="2.5" fill="white"   opacity=".9"/>
+
+        <!-- Ojo derecho -->
+        <circle cx="123" cy="88" r="13"  fill="#08186e" opacity=".28"/>
+        <circle cx="121" cy="86" r="13"  fill="#08186e"/>
+        <circle cx="116" cy="81" r="5"   fill="white"   opacity=".72"/>
+        <circle cx="124" cy="90" r="2.2" fill="white"   opacity=".32"/>
+        <!-- Pupila -->
+        <circle cx="122" cy="87" r="6"   fill="#030d3a"/>
+        <circle cx="119" cy="84" r="2.5" fill="white"   opacity=".9"/>
+
+        <!-- ═══ BOCA / SONRISA ═══ -->
+        <path id="axo-mouth" d="M106 116 Q118 126 130 116"
+              stroke="#08186e" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+        <!-- Mejillitas rosadas -->
+        <ellipse cx="65"  cy="102" rx="8" ry="5" fill="#ff9fbc" opacity=".28"/>
+        <ellipse cx="135" cy="102" rx="8" ry="5" fill="#ff9fbc" opacity=".28"/>
+
+        <!-- ═══ PATITAS FRONTALES ═══ -->
+        <!-- Patita izq -->
+        <ellipse cx="68" cy="162" rx="16" ry="12" transform="rotate(-28 68 162)" fill="url(#axoGBody)"/>
+        <circle cx="55" cy="153" r="6.5" fill="url(#axoGHead)"/>
+        <circle cx="61" cy="147" r="6"   fill="url(#axoGHead)"/>
+        <circle cx="68" cy="144" r="5.5" fill="url(#axoGHead)"/>
+        <path d="M56 155 Q62 150 69 146" stroke="#0a2a90" stroke-width="1.4" fill="none" opacity=".45" stroke-linecap="round"/>
+
+        <!-- Patita der -->
+        <ellipse cx="132" cy="162" rx="16" ry="12" transform="rotate(28 132 162)" fill="url(#axoGBody)"/>
+        <circle cx="145" cy="153" r="6.5" fill="url(#axoGHead)"/>
+        <circle cx="139" cy="147" r="6"   fill="url(#axoGHead)"/>
+        <circle cx="132" cy="144" r="5.5" fill="url(#axoGHead)"/>
+        <path d="M144 155 Q138 150 131 146" stroke="#0a2a90" stroke-width="1.4" fill="none" opacity=".45" stroke-linecap="round"/>
+
+        <!-- ═══ BARRIGA CLARA ═══ -->
+        <ellipse cx="100" cy="168" rx="30" ry="25" fill="url(#axoGBelly)" opacity=".35"/>
+        <path d="M88 178 Q100 186 112 178" stroke="#2070d8" stroke-width="1.6" fill="none" opacity=".3" stroke-linecap="round"/>
+        <path d="M91 169 Q100 175 109 169" stroke="#2070d8" stroke-width="1.4" fill="none" opacity=".22" stroke-linecap="round"/>
+
+        <!-- Brillo cuerpo -->
+        <ellipse cx="84" cy="138" rx="18" ry="11" fill="white" opacity=".07"/>
+      </svg>
+    </div>
+  `;
+
+  document.body.appendChild(container);
+
+  window.axoToggle = function() { isOpen ? closeTutorial() : openTutorial(); };
+  window.axoClose  = closeTutorial;
+  window.axoNext   = nextStep;
+  window.axoPrev   = prevStep;
+  window.axoGoTo   = function(idx) { currentStep = idx; showStep(idx); };
+
+})();
+
+</script>
+</body>
+</html>

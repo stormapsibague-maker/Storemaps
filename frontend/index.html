@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storemaps - Compra Local en Ibagué</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+body{background:#f5f5f5;color:#374151;}
+
+/* TOPBAR */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 24px;background:white;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:500;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.logo{color:#16a34a;font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.search-bar{display:flex;align-items:center;background:#f3f4f6;padding:9px 16px;border-radius:30px;gap:8px;}
+.search-bar input{border:none;background:transparent;outline:none;width:260px;font-size:14px;}
+.location{color:#555;font-size:14px;display:flex;align-items:center;gap:6px;}
+
+/* NAV */
+.main-menu{display:flex;gap:6px;padding:10px 20px;background:white;border-bottom:1px solid #e5e7eb;}
+.main-menu a{text-decoration:none;color:#555;font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;transition:.2s;}
+.main-menu a:hover{background:#f0fdf4;color:#16a34a;}
+.main-menu a.active{color:#16a34a;font-weight:700;background:#f0fdf4;}
+
+/* HERO */
+.hero-banner{text-align:center;padding:40px 20px 32px;background:white;border-radius:16px;margin:20px 24px 0;box-shadow:0 4px 14px rgba(0,0,0,0.06);}
+.hero-banner h1{font-size:30px;font-weight:800;margin-bottom:8px;color:#111827;}
+.hero-banner p{color:#6b7280;margin-bottom:20px;font-size:15px;max-width:500px;margin-left:auto;margin-right:auto;}
+.hero-buttons{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;}
+.btn-primary{background:#16a34a;color:white;padding:11px 22px;border:none;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;text-decoration:none;display:inline-flex;align-items:center;gap:7px;transition:.2s;}
+.btn-primary:hover{background:#15803d;}
+.btn-secondary{background:#f3f4f6;color:#374151;padding:11px 22px;border-radius:10px;border:none;cursor:pointer;font-weight:600;font-size:14px;text-decoration:none;display:inline-flex;align-items:center;gap:7px;transition:.2s;}
+.btn-secondary:hover{background:#e5e7eb;}
+
+/* MAP SECTION */
+.map-section{margin:20px 24px;background:white;border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,0.07);}
+.map-header{padding:18px 20px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.map-header h2{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.map-header p{color:#6b7280;font-size:13px;margin-top:2px;}
+.map-controls{display:flex;gap:8px;flex-wrap:wrap;}
+.map-filter-btn{background:#f3f4f6;border:2px solid transparent;color:#374151;padding:6px 14px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:500;transition:.2s;display:flex;align-items:center;gap:5px;}
+.map-filter-btn:hover{border-color:#16a34a;color:#16a34a;}
+.map-filter-btn.active{background:#dcfce7;border-color:#16a34a;color:#16a34a;font-weight:600;}
+#map{height:480px;width:100%;display:block;position:relative;z-index:1;}
+
+/* PIN LEGEND */
+.pin-legend{padding:12px 20px;border-top:1px solid #f0f0f0;display:flex;gap:20px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:#6b7280;}
+.legend-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+
+/* STORE COUNT BADGE */
+.store-count{background:#dcfce7;color:#16a34a;border-radius:20px;padding:3px 12px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:5px;}
+
+/* CATEGORIES */
+.categories{margin:20px 24px;}
+.categories h2{font-size:20px;font-weight:700;margin-bottom:16px;}
+.categories-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;}
+.category-card{background:white;padding:22px 16px;border-radius:12px;text-align:center;text-decoration:none;color:#374151;box-shadow:0 4px 12px rgba(0,0,0,0.06);transition:.3s;border:2px solid transparent;}
+.category-card i{font-size:26px;color:#16a34a;margin-bottom:8px;display:block;}
+.category-card h3{font-size:14px;font-weight:600;}
+.category-card p{font-size:12px;color:#9ca3af;margin-top:3px;}
+.category-card:hover{transform:translateY(-4px);border-color:#16a34a;}
+
+/* FOOTER */
+.footer{margin-top:40px;background:#111827;color:white;padding:36px 24px;text-align:center;}
+.footer-logo{font-size:20px;font-weight:700;margin-bottom:8px;color:#4ade80;}
+.footer p{color:#9ca3af;font-size:13px;}
+.footer-links{margin-top:14px;display:flex;justify-content:center;gap:20px;flex-wrap:wrap;}
+.footer-links a{color:#d1d5db;text-decoration:none;font-size:13px;}
+.footer-links a:hover{color:white;}
+
+/* LOADING STATES */
+.loading-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;border-radius:0 0 16px 16px;}
+.loading-overlay.hidden{display:none;}
+.spinner{width:40px;height:40px;border:4px solid #e5e7eb;border-top-color:#16a34a;border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{margin-top:12px;color:#6b7280;font-size:14px;}
+
+/* ERROR MESSAGE */
+.map-error{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;padding:30px;background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.2);z-index:1001;max-width:300px;}
+.map-error.hidden{display:none;}
+.map-error i{font-size:48px;color:#ef4444;margin-bottom:12px;}
+.map-error h3{margin-bottom:8px;color:#111827;}
+.map-error p{color:#6b7280;font-size:14px;margin-bottom:16px;}
+.retry-btn{background:#16a34a;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:600;}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .topbar{flex-wrap:wrap;gap:8px;padding:10px 14px;}
+  .search-bar{width:100%;order:3;}.search-bar input{width:100%;}
+  .location{display:none;}
+  .main-menu{overflow-x:auto;padding:8px 10px;gap:4px;-webkit-overflow-scrolling:touch;}
+  .main-menu a{font-size:12px;padding:6px 10px;white-space:nowrap;}
+  .map-section{margin:12px 10px;}
+  .map-header{flex-direction:column;align-items:flex-start;gap:8px;}
+  .hero-banner{margin:12px 10px 0;padding:28px 16px 24px;}
+  .hero-banner h1{font-size:22px;}
+  .hero-banner p{font-size:14px;}
+  .categories{margin:12px 10px;}
+  .categories-grid{grid-template-columns:repeat(3,1fr);gap:10px;}
+  #map{height:340px;}
+  #btnMyLocationMap{font-size:12px;padding:6px 12px;}
+  .store-count{font-size:12px;}
+  .pin-legend{padding:10px 12px;gap:8px;flex-wrap:wrap;}
+}
+@media(max-width:480px){
+  .topbar{padding:8px 10px;}
+  .logo{font-size:16px;}
+  .main-menu a{font-size:11px;padding:5px 8px;}
+  #map{height:260px;}
+  .map-header h2{font-size:15px;}
+  .map-header p{font-size:12px;}
+  #btnMyLocationMap span{display:none;}
+  .hero-banner{padding:22px 14px 18px;}
+  .hero-banner h1{font-size:19px;}
+  .hero-buttons{gap:8px;}
+  .btn-primary,.btn-secondary{padding:9px 16px;font-size:13px;}
+  .categories-grid{grid-template-columns:repeat(2,1fr);}
+  .category-card{padding:16px 10px;}
+}
+
+/* LEAFLET CUSTOM POPUP */
+.leaflet-popup-content-wrapper{border-radius:14px!important;box-shadow:0 8px 28px rgba(0,0,0,0.18)!important;padding:0!important;overflow:hidden;}
+.leaflet-popup-content{margin:0!important;width:260px!important;}
+.leaflet-popup-tip-container{display:none;}
+
+/* STORE POPUP */
+.store-popup-img{width:100%;height:130px;object-fit:cover;display:block;}
+.store-popup-body{padding:14px;}
+.store-popup-body h3{font-size:15px;font-weight:700;margin-bottom:4px;}
+.store-popup-cat{display:inline-block;background:#f0fdf4;color:#16a34a;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:600;margin-bottom:8px;}
+.store-popup-meta{font-size:12px;color:#6b7280;margin-bottom:4px;display:flex;align-items:center;gap:5px;}
+.store-popup-btn{display:block;width:100%;background:#16a34a;color:white;border:none;padding:10px 0;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;margin-top:10px;text-align:center;text-decoration:none;transition:.2s;}
+.store-popup-btn:hover{background:#15803d;}
+
+/* USER LOCATION MARKER */
+.user-location-marker{background:#3b82f6;border:3px solid white;border-radius:50%;width:16px;height:16px;box-shadow:0 2px 10px rgba(59,130,246,0.6);}
+</style>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo"><i class="fas fa-map-marker-alt"></i><b>Storemaps</b></div>
+  <div class="search-bar">
+    <i class="fas fa-search" style="color:#aaa"></i>
+    <input type="text" id="searchInput" placeholder="Buscar tiendas o productos..." oninput="filterMarkers(this.value)">
+  </div>
+  <div class="location" id="userLocation"><i class="fas fa-map-marker-alt"></i> <span>Detectando ubicación...</span></div>
+</header>
+
+<!-- NAV -->
+<nav class="main-menu">
+  <a href="index.html" class="active"><i class="fas fa-map"></i> Mapa</a>
+  <a href="discover.html"><i class="fas fa-compass"></i> Descubrir</a>
+  <a href="favorites.html"><i class="fas fa-heart"></i> Favoritos</a>
+  <a href="forum.html"><i class="fas fa-comments"></i> Foro</a>
+  <a href="videos.html"><i class="fas fa-video"></i> Videos</a>
+  <a href="profile.html" id="navProfileLink" style="margin-left:auto;"><i class="fas fa-user"></i> Iniciar sesión</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero-banner">
+  <h1>🏪 Descubre tiendas locales en Ibagué</h1>
+  <p>Encuentra ropa, calzado, comida y más cerca de ti. Apoya el comercio local.</p>
+  <div class="hero-buttons">
+    <a href="discover.html" class="btn-primary"><i class="fas fa-compass"></i> Explorar productos</a>
+    <a href="profile.html" class="btn-secondary"><i class="fas fa-store"></i> Registrar mi tienda</a>
+  </div>
+</section>
+
+<!-- MAP SECTION -->
+<section class="map-section" style="position:relative;">
+  <div class="map-header">
+    <div>
+      <h2><i class="fas fa-map-marker-alt" style="color:#16a34a"></i> Tiendas cerca de ti</h2>
+      <p>Haz click en un pin para ver la información de la tienda</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span class="store-count"><i class="fas fa-store"></i> <span id="storeCountBadge">0</span> tiendas</span>
+      <button onclick="useMyLocationMap()" id="btnMyLocationMap" style="background:linear-gradient(135deg,#3b82f6,#60a5fa);color:white;border:none;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 3px 10px rgba(59,130,246,0.35);transition:.2s" title="Ir a mi ubicación">
+        <i class="fas fa-crosshairs"></i> <span>Mi ubicación</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- FILTER BUTTONS -->
+  <div style="padding:0 20px 14px;display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="map-filter-btn active" data-cat="all" onclick="setMapFilter(this,'all')"><i class="fas fa-th"></i> Todas</button>
+    <button class="map-filter-btn" data-cat="calzado" onclick="setMapFilter(this,'calzado')"><i class="fas fa-shoe-prints"></i> Calzado</button>
+    <button class="map-filter-btn" data-cat="ropa" onclick="setMapFilter(this,'ropa')"><i class="fas fa-tshirt"></i> Ropa</button>
+    <button class="map-filter-btn" data-cat="comida" onclick="setMapFilter(this,'comida')"><i class="fas fa-utensils"></i> Comida</button>
+    <button class="map-filter-btn" data-cat="tecnologia" onclick="setMapFilter(this,'tecnologia')"><i class="fas fa-laptop"></i> Tecnología</button>
+    <button class="map-filter-btn" data-cat="hogar" onclick="setMapFilter(this,'hogar')"><i class="fas fa-home"></i> Hogar</button>
+    <button class="map-filter-btn" data-cat="belleza" onclick="setMapFilter(this,'belleza')"><i class="fas fa-spa"></i> Belleza</button>
+    <button class="map-filter-btn" data-cat="deporte" onclick="setMapFilter(this,'deporte')"><i class="fas fa-dumbbell"></i> Deporte</button>
+    <button class="map-filter-btn" data-cat="mercado" onclick="setMapFilter(this,'mercado')"><i class="fas fa-shopping-basket"></i> Mercado</button>
+  </div>
+
+  <div id="map">
+    <!-- Loading Overlay -->
+    <div id="mapLoading" class="loading-overlay">
+      <div class="spinner"></div>
+      <div class="loading-text">Cargando mapa...</div>
+    </div>
+    <!-- Error Message -->
+    <div id="mapError" class="map-error hidden">
+      <i class="fas fa-exclamation-circle"></i>
+      <h3>Error de conexión</h3>
+      <p>No se pudieron cargar las tiendas. Verifica tu conexión.</p>
+      <button class="retry-btn" onclick="retryLoadStores()"><i class="fas fa-redo"></i> Reintentar</button>
+    </div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="pin-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div> Tienda registrada</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Comida y restaurantes</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> Tecnología</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ec4899"></div> Belleza y salud</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div> Ropa y moda</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> Deporte</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-logo"><i class="fas fa-map-marker-alt"></i> Storemaps</div>
+  <p>Apoyando el comercio local en Ibagué</p>
+  <div class="footer-links">
+    <a href="forum.html">Comunidad</a>
+    <a href="videos.html">Videos</a>
+    <a href="discover.html">Explorar</a>
+    <a href="profile.html">Registrar tienda</a>
+  </div>
+</footer>
+
+<script>
+// ==========================================
+// CONFIGURACIÓN
+// ==========================================
+const API_URL = 'https://storemaps-api.onrender.com/api';
+const DEFAULT_LOCATION = { lat: 4.4447, lng: -75.2424, name: 'El Jordán, Ibagué' };
+
+// ==========================================
+// ESTADO GLOBAL
+// ==========================================
+let map = null;
+let allMarkers = [];
+let storesCache = [];
+let currentFilter = 'all';
+let userLocation = null;
+let userMarker = null;
+
+// Colores por categoría
+const catColors = {
+  calzado: '#16a34a',
+  ropa: '#8b5cf6',
+  comida: '#f59e0b',
+  tecnologia: '#3b82f6',
+  belleza: '#ec4899',
+  deporte: '#ef4444',
+  hogar: '#06b6d4',
+  accesorios: '#d97706',
+  mercado: '#059669',
+  default: '#16a34a'
+};
+
+const catIcons = {
+  calzado: 'fa-shoe-prints',
+  ropa: 'fa-tshirt',
+  comida: 'fa-utensils',
+  tecnologia: 'fa-laptop',
+  belleza: 'fa-spa',
+  deporte: 'fa-dumbbell',
+  hogar: 'fa-home',
+  accesorios: 'fa-gem',
+  mercado: 'fa-shopping-basket',
+  default: 'fa-store'
+};
+
+// ==========================================
+// INICIALIZACIÓN
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+  initMap();
+  loadUserLocation();
+});
+
+// ==========================================
+// MAPA
+// ==========================================
+function initMap() {
+  const mapContainer = document.getElementById('map');
+  if (!mapContainer) return;
+
+  // Centro por defecto: El Jordán, Ibagué
+  const defaultLoc = [DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lng];
+  
+  map = L.map('map', {
+    center: defaultLoc,
+    zoom: 15,
+    zoomControl: false
+  });
+  
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+  
+  // Capa de tiles - CartoDB Voyager (limpio y moderno)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '©OpenStreetMap, ©CartoDB',
+    maxZoom: 19
+  }).addTo(map);
+
+  // Forzar actualización de tamaño después de un momento
+  setTimeout(() => map.invalidateSize(), 300);
+}
+
+// ==========================================
+// GEOLOCALIZACIÓN
+// ==========================================
+function loadUserLocation() {
+  const locationEl = document.querySelector('#userLocation span');
+  
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        userLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        
+        // Actualizar UI
+        locationEl.textContent = 'Mi ubicación actual';
+        
+        // Centrar mapa
+        if (map) {
+          map.setView([userLocation.lat, userLocation.lng], 16);
+          
+          // Marcador de usuario
+          if (userMarker) map.removeLayer(userMarker);
+          userMarker = L.marker([userLocation.lat, userLocation.lng], {
+            icon: L.divIcon({
+              className: '',
+              html: '<div class="user-location-marker"></div>',
+              iconSize: [16, 16],
+              iconAnchor: [8, 8]
+            })
+          }).addTo(map).bindPopup('<b>📍 Tu ubicación</b>');
+        }
+        
+        // Cargar tiendas cercanas
+        loadStores();
+      },
+      (error) => {
+        console.log('Geolocalización denegada, usando ubicación por defecto');
+        locationEl.textContent = DEFAULT_LOCATION.name;
+        userLocation = DEFAULT_LOCATION;
+        
+        if (map) {
+          map.setView([DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lng], 15);
+        }
+        
+        loadStores();
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  } else {
+    locationEl.textContent = DEFAULT_LOCATION.name;
+    userLocation = DEFAULT_LOCATION;
+    loadStores();
+  }
+}
+
+// ==========================================
+// BOTÓN MI UBICACIÓN
+// ==========================================
+function useMyLocationMap() {
+  const btn = document.getElementById('btnMyLocationMap');
+
+  // Si ya tenemos ubicación del usuario, simplemente volar a ella
+  if (userLocation && userMarker) {
+    if (map) map.flyTo([userLocation.lat, userLocation.lng], 17, { animate: true, duration: 1.0 });
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Buscando...</span>';
+  }
+
+  const resetBtn = () => {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-crosshairs"></i> <span>Mi ubicación</span>'; }
+  };
+
+  function placeUserMarker(lat, lng, label) {
+    userLocation = { lat, lng };
+    const locationEl = document.querySelector('#userLocation span');
+    if (locationEl) locationEl.textContent = label;
+
+    if (map) {
+      map.flyTo([lat, lng], 17, { animate: true, duration: 1.2 });
+      if (userMarker) map.removeLayer(userMarker);
+      userMarker = L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: '',
+          html: '<div class="user-location-marker"></div>',
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
+        })
+      }).addTo(map).bindPopup('<b>📍 ' + label + '</b>').openPopup();
+    }
+    loadStores();
+  }
+
+  if (!navigator.geolocation) {
+    // Sin soporte: centrar en Ibagué por defecto
+    placeUserMarker(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lng, DEFAULT_LOCATION.name);
+    resetBtn();
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      placeUserMarker(pos.coords.latitude, pos.coords.longitude, 'Mi ubicación actual');
+      resetBtn();
+    },
+    (err) => {
+      // Permiso denegado o timeout: usar ubicación por defecto sin alert molesto
+      placeUserMarker(DEFAULT_LOCATION.lat, DEFAULT_LOCATION.lng, DEFAULT_LOCATION.name);
+      resetBtn();
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+  );
+}
+
+// ==========================================
+// CARGAR TIENDAS DESDE API
+// ==========================================
+async function loadStores() {
+  const loadingEl = document.getElementById('mapLoading');
+  const errorEl = document.getElementById('mapError');
+  
+  loadingEl.classList.remove('hidden');
+  errorEl.classList.add('hidden');
+  
+  try {
+    const lat = userLocation?.lat || DEFAULT_LOCATION.lat;
+    const lng = userLocation?.lng || DEFAULT_LOCATION.lng;
+    const radius = 15000; // 15km
+    
+    const response = await fetch(`${API_URL}/stores?lat=${lat}&lng=${lng}&radius=${radius}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const stores = await response.json();
+    storesCache = stores;
+    
+    // Renderizar marcadores
+    renderMarkers(stores);
+    
+    // Actualizar contador
+    document.getElementById('storeCountBadge').textContent = stores.length;
+    
+    loadingEl.classList.add('hidden');
+    
+    // Si viene de videos.html con ?store=ID, abrir ese pin
+    checkStoreParam();
+    
+  } catch (error) {
+    console.error('Error cargando tiendas:', error);
+    loadingEl.classList.add('hidden');
+    errorEl.classList.remove('hidden');
+  }
+}
+
+function retryLoadStores() {
+  loadStores();
+}
+
+// ==========================================
+// ABRIR TIENDA DESDE URL PARAM (?store=ID)
+// ==========================================
+function checkStoreParam() {
+  const params = new URLSearchParams(window.location.search);
+  const storeId = params.get('store');
+  if (!storeId) return;
+  
+  // Buscar el marcador correspondiente
+  const marker = allMarkers.find(m => m._storeData?._id === storeId);
+  if (marker) {
+    const lat = marker._storeData.lat || marker._storeData.location?.coordinates?.[1];
+    const lng = marker._storeData.lng || marker._storeData.location?.coordinates?.[0];
+    if (lat && lng) {
+      setTimeout(() => {
+        map.flyTo([lat, lng], 17, { animate: true, duration: 1.2 });
+        setTimeout(() => marker.openPopup(), 1300);
+      }, 300);
+    }
+  }
+  // Limpiar param de la URL sin recargar
+  window.history.replaceState({}, '', window.location.pathname);
+}
+
+function renderMarkers(stores) {
+  // Limpiar marcadores anteriores
+  allMarkers.forEach(m => map.removeLayer(m));
+  allMarkers = [];
+  
+  // Filtrar por categoría si es necesario
+  let filteredStores = stores;
+  if (currentFilter !== 'all') {
+    filteredStores = stores.filter(s => s.category === currentFilter);
+  }
+  
+  // Actualizar contador
+  document.getElementById('storeCountBadge').textContent = filteredStores.length;
+  
+  filteredStores.forEach(store => {
+    const lat = store.lat || store.location?.coordinates?.[1];
+    const lng = store.lng || store.location?.coordinates?.[0];
+    
+    if (!lat || !lng) return;
+    
+    const category = store.category || 'default';
+    const color = catColors[category] || catColors.default;
+    const icon = catIcons[category] || catIcons.default;
+    
+    // Crear icono personalizado
+    const customIcon = L.divIcon({
+      className: '',
+      html: `
+        <div style="position:relative;width:42px;height:42px;">
+          <div style="
+            background:${color};
+            width:42px;height:42px;
+            border-radius:50% 50% 50% 0;
+            transform:rotate(-45deg);
+            border:3px solid white;
+            box-shadow:0 4px 14px rgba(0,0,0,0.3);
+            display:flex;align-items:center;justify-content:center;
+          ">
+            <i class='fas ${icon}' style='color:white;font-size:16px;transform:rotate(45deg);'></i>
+          </div>
+        </div>
+      `,
+      iconSize: [42, 42],
+      iconAnchor: [21, 42],
+      popupAnchor: [0, -44]
+    });
+    
+    // Crear marcador
+    const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+    
+    // Crear popup
+    const popupContent = buildPopup(store, color);
+    marker.bindPopup(popupContent, { maxWidth: 280, className: 'store-popup' });
+    
+    // Guardar referencia y datos
+    marker._storeData = store;
+    allMarkers.push(marker);
+  });
+}
+
+function buildPopup(store, color) {
+  const category = store.category || 'tienda';
+  const name = store.name || 'Tienda sin nombre';
+  const address = store.location?.address || store.address || 'Ibagué';
+  const image = store.images?.[0] || 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=300';
+  const lat = store.lat || store.location?.coordinates?.[1];
+  const lng = store.lng || store.location?.coordinates?.[0];
+  const scheduleText = store.schedule ? formatSchedule(store.schedule) : null;
+  const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+  
+  return `
+    <img class="store-popup-img" src="${image}" onerror="this.src='https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=300'">
+    <div class="store-popup-body">
+      <span class="store-popup-cat" style="background:${color}20;color:${color}">${category}</span>
+      <h3>${name}</h3>
+      <div class="store-popup-meta"><i class="fas fa-map-marker-alt" style="color:${color}"></i> ${address}</div>
+      ${store.phone ? `<div class="store-popup-meta"><i class="fas fa-phone" style="color:#3b82f6"></i> ${store.phone}</div>` : ''}
+      ${scheduleText ? `<div class="store-popup-meta"><i class="fas fa-clock" style="color:#f59e0b"></i> ${scheduleText}</div>` : ''}
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <a href="${mapsUrl}" target="_blank" class="store-popup-btn" style="background:${color};flex:1;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;">
+          <i class="fas fa-route"></i> Cómo llegar
+        </a>
+        <button onclick="openStoreDetail('${store._id}')" class="store-popup-btn" style="background:#f3f4f6;color:#374151;flex:1;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <i class="fas fa-store"></i> Ver más
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function formatSchedule(schedule) {
+  if (!schedule) return 'Consultar horario';
+  const today = new Date().getDay();
+  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const daySchedule = schedule[days[today]];
+  
+  if (daySchedule?.open && daySchedule?.close) {
+    return `Hoy: ${daySchedule.open} - ${daySchedule.close}`;
+  }
+  return 'Cerrado hoy';
+}
+
+// ==========================================
+// FILTROS
+// ==========================================
+function setMapFilter(btn, category) {
+  // Actualizar botones activos
+  document.querySelectorAll('.map-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  // Actualizar filtro actual
+  currentFilter = category;
+  
+  // Re-renderizar
+  renderMarkers(storesCache);
+  
+  // Ajustar vista si hay marcadores
+  if (allMarkers.length > 0 && map) {
+    const group = new L.featureGroup(allMarkers);
+    map.fitBounds(group.getBounds().pad(0.1));
+  }
+}
+
+// ==========================================
+// BÚSQUEDA
+// ==========================================
+function filterMarkers(query) {
+  if (!query.trim()) {
+    renderMarkers(storesCache);
+    return;
+  }
+  
+  const q = query.toLowerCase();
+  const filtered = storesCache.filter(s => {
+    const name = (s.name || '').toLowerCase();
+    const category = (s.category || '').toLowerCase();
+    const address = (s.location?.address || s.address || '').toLowerCase();
+    
+    return name.includes(q) || category.includes(q) || address.includes(q);
+  });
+  
+  // Limpiar y renderizar filtrados
+  allMarkers.forEach(m => map.removeLayer(m));
+  allMarkers = [];
+  
+  filtered.forEach(store => {
+    const lat = store.lat || store.location?.coordinates?.[1];
+    const lng = store.lng || store.location?.coordinates?.[0];
+    if (!lat || !lng) return;
+    
+    const category = store.category || 'default';
+    const color = catColors[category] || catColors.default;
+    const icon = catIcons[category] || catIcons.default;
+    
+    const customIcon = L.divIcon({
+      className: '',
+      html: `
+        <div style="position:relative;width:42px;height:42px;">
+          <div style="
+            background:${color};
+            width:42px;height:42px;
+            border-radius:50% 50% 50% 0;
+            transform:rotate(-45deg);
+            border:3px solid white;
+            box-shadow:0 4px 14px rgba(0,0,0,0.3);
+            display:flex;align-items:center;justify-content:center;
+          ">
+            <i class='fas ${icon}' style='color:white;font-size:16px;transform:rotate(45deg);'></i>
+          </div>
+        </div>
+      `,
+      iconSize: [42, 42],
+      iconAnchor: [21, 42],
+      popupAnchor: [0, -44]
+    });
+    
+    const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+    marker.bindPopup(buildPopup(store, color), { maxWidth: 280 });
+    allMarkers.push(marker);
+  });
+  
+  document.getElementById('storeCountBadge').textContent = filtered.length;
+}
+
+// ==========================================
+// UTILIDADES
+// ==========================================
+
+// ==========================================
+// VER MÁS — Modal de tienda con productos y videos
+// ==========================================
+async function openStoreDetail(storeId) {
+  // Create modal if not exists
+  let modal = document.getElementById('storeDetailModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'storeDetailModal';
+    modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;overflow-y:auto;backdrop-filter:blur(4px);';
+    modal.innerHTML = `
+      <div style="max-width:600px;margin:40px auto;background:white;border-radius:20px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.3);position:relative;">
+        <div id="storeDetailContent" style="padding:0;"></div>
+        <button onclick="document.getElementById('storeDetailModal').style.display='none'" 
+          style="position:absolute;top:14px;right:14px;background:rgba(0,0,0,0.5);color:white;border:none;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;">✕</button>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function(e){ if(e.target===this) this.style.display='none'; });
+  }
+  
+  modal.style.display = 'block';
+  document.getElementById('storeDetailContent').innerHTML = `
+    <div style="padding:40px;text-align:center;color:#6b7280;">
+      <div style="width:40px;height:40px;border:4px solid #e5e7eb;border-top-color:#16a34a;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;"></div>
+      Cargando tienda...
+    </div>`;
+  
+  try {
+    const res = await fetch(`${API_URL}/stores/${storeId}`);
+    const data = await res.json();
+    const store = data.store || data;
+    const products = data.products || [];
+    const videos = data.videos || [];
+    
+    const lat = store.lat || store.location?.coordinates?.[1];
+    const lng = store.lng || store.location?.coordinates?.[0];
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    const category = store.category || 'tienda';
+    const color = catColors[category] || catColors.default;
+    const scheduleHtml = buildScheduleHtml(store.schedule);
+    
+    document.getElementById('storeDetailContent').innerHTML = `
+      <!-- GALERIA DE IMAGENES -->
+      ${(store.images && store.images.length > 0) ? `
+        <div id="storeGallery" style="position:relative;width:100%;height:220px;overflow:hidden;background:#111;">
+          ${store.images.map((img, i) => `
+            <img src="${img}" data-idx="${i}"
+                 style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity 0.4s;opacity:${i===0?1:0};"
+                 onerror="this.src='https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=600'">
+          `).join('')}
+          ${store.images.length > 1 ? `
+            <button onclick="galleryPrev()" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:white;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;z-index:5;">&#8249;</button>
+            <button onclick="galleryNext(${store.images.length})" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:white;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;z-index:5;">&#8250;</button>
+            <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:5;">
+              ${store.images.map((_, i) => `<span id="dot-${i}" style="width:7px;height:7px;border-radius:50%;background:${i===0?'white':'rgba(255,255,255,0.5)'}; cursor:pointer;" onclick="galleryGoTo(${i},${store.images.length})"></span>`).join('')}
+            </div>
+          ` : ''}
+        </div>
+      ` : `
+        <img src="https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=600"
+             style="width:100%;height:200px;object-fit:cover;">
+      `}
+      <div style="padding:24px;">
+        <span style="background:${color}20;color:${color};border-radius:20px;padding:3px 12px;font-size:12px;font-weight:600;">${category}</span>
+        <h2 style="font-size:22px;font-weight:800;margin:10px 0 6px;">${store.name}</h2>
+        ${store.description ? `<p style="color:#6b7280;font-size:14px;margin-bottom:12px;">${store.description}</p>` : ''}
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#6b7280;">
+            <i class="fas fa-map-marker-alt" style="color:${color};width:16px;"></i>
+            ${store.location?.address || 'Ibagué'}
+          </div>
+          ${store.phone ? `<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#6b7280;"><i class="fas fa-phone" style="color:#3b82f6;width:16px;"></i>${store.phone}</div>` : ''}
+        </div>
+        ${scheduleHtml}
+        <a href="${mapsUrl}" target="_blank"
+           style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:${color};color:white;border:none;padding:12px;border-radius:12px;font-weight:700;font-size:14px;text-decoration:none;margin-bottom:20px;">
+          <i class="fas fa-route"></i> Cómo llegar
+        </a>
+        
+        ${products.length > 0 ? `
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+          <i class="fas fa-box" style="color:#16a34a;"></i> Productos (${products.length})
+        </h3>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;">
+          ${products.slice(0,6).map(p => `
+            <div style="background:#f9fafb;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;">
+              <img src="${p.images?.[0] || 'https://via.placeholder.com/150'}" style="width:100%;height:80px;object-fit:cover;"
+                   onerror="this.src='https://via.placeholder.com/150'">
+              <div style="padding:8px;">
+                <div style="font-size:12px;font-weight:600;margin-bottom:2px;">${p.name}</div>
+                <div style="font-size:13px;font-weight:700;color:#16a34a;">$${parseInt(p.price||0).toLocaleString('es-CO')}</div>
+              </div>
+            </div>`).join('')}
+        </div>` : ''}
+        
+        ${videos.length > 0 ? `
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+          <i class="fas fa-video" style="color:#f59e0b;"></i> Videos (${videos.length})
+        </h3>
+        <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;">
+          ${videos.slice(0,4).map(v => `
+            <div style="flex-shrink:0;width:140px;background:#f9fafb;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;">
+              <div style="height:90px;background:#111;display:flex;align-items:center;justify-content:center;font-size:32px;position:relative;">
+                <span style="opacity:0.6;">🎬</span>
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                  <a href="videos.html" style="background:rgba(255,255,255,0.9);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;color:#374151;text-decoration:none;">
+                    <i class="fas fa-play" style="font-size:12px;"></i>
+                  </a>
+                </div>
+              </div>
+              <div style="padding:6px 8px;font-size:11px;color:#6b7280;">${(v.caption||'Video').substring(0,30)}</div>
+            </div>`).join('')}
+        </div>` : ''}
+      </div>`;
+  } catch(e) {
+    document.getElementById('storeDetailContent').innerHTML = `
+      <div style="padding:40px;text-align:center;color:#ef4444;">
+        <i class="fas fa-exclamation-circle" style="font-size:40px;margin-bottom:12px;display:block;"></i>
+        Error cargando tienda. Intenta de nuevo.
+      </div>`;
+  }
+}
+
+function buildScheduleHtml(schedule) {
+  if (!schedule) return '';
+  const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const dayNames = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const today = new Date().getDay();
+  
+  let rows = '';
+  let hasAny = false;
+  days.forEach((d, i) => {
+    const s = schedule[d];
+    if (s && (s.open || s.close)) {
+      hasAny = true;
+      const isToday = i === today;
+      rows += `<div style="display:flex;justify-content:space-between;padding:4px 8px;border-radius:6px;${isToday ? 'background:#dcfce7;font-weight:700;' : ''}">
+        <span style="font-size:12px;color:#374151;">${dayNames[i]}${isToday ? ' (hoy)' : ''}</span>
+        <span style="font-size:12px;color:${isToday ? '#16a34a' : '#6b7280'};">${s.open || '--'} - ${s.close || '--'}</span>
+      </div>`;
+    }
+  });
+  
+  if (!hasAny) return '';
+  return `
+    <div style="background:#f9fafb;border-radius:10px;padding:12px;margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+        <i class="fas fa-clock" style="color:#f59e0b;"></i> Horario
+      </div>
+      ${rows}
+    </div>`;
+}
+
+
+// ==========================================
+// GALERÍA DE IMÁGENES EN MODAL DE TIENDA
+// ==========================================
+let _galleryIdx = 0;
+function galleryGoTo(idx, total) {
+  const imgs = document.querySelectorAll('#storeGallery img');
+  const dots = document.querySelectorAll('#storeGallery span[id^="dot-"]');
+  imgs.forEach((img, i) => { img.style.opacity = i === idx ? '1' : '0'; });
+  dots.forEach((dot, i) => { dot.style.background = i === idx ? 'white' : 'rgba(255,255,255,0.5)'; });
+  _galleryIdx = idx;
+}
+function galleryNext(total) {
+  galleryGoTo((_galleryIdx + 1) % total, total);
+}
+function galleryPrev() {
+  const imgs = document.querySelectorAll('#storeGallery img');
+  const total = imgs.length;
+  galleryGoTo((_galleryIdx - 1 + total) % total, total);
+}
+window.galleryGoTo = galleryGoTo;
+window.galleryNext = galleryNext;
+window.galleryPrev = galleryPrev;
+
+window.openStoreDetail = openStoreDetail;
+
+function showToast(message) {
+  let toast = document.getElementById('appToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'appToast';
+    document.body.appendChild(toast);
+  }
+  
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(0);
+    background: #111827;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 9999;
+    transition: all 0.3s;
+    opacity: 1;
+  `;
+  
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(80px)';
+  }, 3000);
+}
+</script>
+<script>
+/* ============================================================
+   MASCOTA STOREMAPS — Ajolote azul con llama
+   Tutorial interactivo para cada página
+   ============================================================ */
+
+(function() {
+
+  // Detectar qué página es
+  const page = location.pathname.split('/').pop() || 'index.html';
+
+  // Tutoriales por página
+  const tutorials = {
+    'index.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'Soy la mascota de Storemaps. ¡Voy a mostrarte cómo usar la app! Tócame cuando quieras ayuda.', icon: '🦎', highlight: null },
+      { title: 'Barra de navegación', text: 'Aquí arriba puedes moverte entre las secciones: Mapa, Descubrir, Favoritos, Foro, Videos y Perfil.', icon: '🗺️', highlight: '.main-menu' },
+      { title: 'Buscador', text: 'Escribe aquí el nombre de una tienda o producto para encontrarlo rápidamente en el mapa.', icon: '🔍', highlight: '.search-bar' },
+      { title: 'El Mapa', text: 'Este mapa muestra todas las tiendas de Ibagué. Los pins de colores son cada negocio. ¡Toca uno para ver info!', icon: '📍', highlight: '#map' },
+      { title: 'Filtros del mapa', text: 'Usa estos botones para filtrar las tiendas por categoría: Calzado, Ropa, Comida, etc.', icon: '🎯', highlight: '.map-section .map-filter-btn' },
+      { title: 'Categorías rápidas', text: 'Accede rápidamente a cualquier categoría de productos tocando estas tarjetas.', icon: '🛍️', highlight: '.categories' },
+      { title: '¡Listo! 🎉', text: 'Ya conoces el Mapa. Explora las otras secciones o tócame si necesitas ayuda. ¡A comprar local!', icon: '🔥', highlight: null },
+    ],
+    'discover.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'Estás en Descubrir, donde encuentras todos los productos de las tiendas de Ibagué.', icon: '🦎', highlight: null },
+      { title: 'Filtros por categoría', text: 'Toca cualquier categoría para ver solo esos productos. ¡Puedes filtrar por Ropa, Comida, Tecnología y más!', icon: '🎯', highlight: '.filter-bar' },
+      { title: 'Buscador', text: 'Escribe el nombre de un producto o tienda aquí para buscarlo directamente.', icon: '🔍', highlight: '#searchInput' },
+      { title: 'Tarjetas de productos', text: 'Cada tarjeta muestra un producto. Toca la imagen para ver más detalles como dirección y horario.', icon: '🛍️', highlight: '.pin-card' },
+      { title: 'Botón de favorito ❤️', text: 'Toca el corazón en cualquier producto para guardarlo en Favoritos. ¡Se pone rojo al guardarlo!', icon: '❤️', highlight: '.heart-btn' },
+      { title: 'Ver en mapa', text: 'Desde los detalles del producto puedes abrirlo directamente en Google Maps.', icon: '📍', highlight: null },
+      { title: '¡Ya eres un experto! 🎉', text: 'Ahora sabes usar Descubrir. ¡Explora los productos y guarda tus favoritos!', icon: '🔥', highlight: null },
+    ],
+    'favorites.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'Aquí están todos los productos que guardaste con ❤️ en Descubrir.', icon: '🦎', highlight: null },
+      { title: 'Tus favoritos', text: 'Cada tarjeta es un producto que marcaste como favorito. Se guardan automáticamente en tu dispositivo.', icon: '❤️', highlight: '.fav-card' },
+      { title: 'Quitar favorito', text: 'Toca la ✕ en la esquina de cualquier tarjeta para quitarlo de favoritos.', icon: '🗑️', highlight: '.remove-btn' },
+      { title: 'Ver en mapa', text: 'El botón verde te lleva directamente a la ubicación de la tienda en Google Maps.', icon: '📍', highlight: '.btn-map' },
+      { title: '¡Listo! 🎉', text: 'Ve a Descubrir para agregar más productos a tus favoritos tocando el ❤️ en cada tarjeta.', icon: '🔥', highlight: null },
+    ],
+    'videos.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'Estás en Videos, donde las tiendas muestran sus productos en formato corto estilo TikTok.', icon: '🦎', highlight: null },
+      { title: 'Desliza para navegar', text: 'Desliza hacia arriba o abajo para pasar al siguiente video. ¡Cada uno es de una tienda diferente!', icon: '👆', highlight: '.videos-scroll' },
+      { title: 'Dar like ❤️', text: 'Toca el corazón para darle like al video. El contador se actualiza y se guarda tu reacción.', icon: '❤️', highlight: '.action-btn' },
+      { title: 'Info del producto', text: 'Abajo de cada video ves el nombre de la tienda, descripción y precio del producto destacado.', icon: '🏷️', highlight: '.video-info' },
+      { title: 'Navegación inferior', text: 'Usa esta barra para moverte entre todas las secciones de la app.', icon: '🗺️', highlight: '.bottom-nav' },
+      { title: '¡Disfruta! 🎉', text: 'Mira videos de las tiendas locales de Ibagué y descubre sus mejores productos.', icon: '🔥', highlight: null },
+    ],
+    'profile.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'En Perfil puedes entrar como Usuario, Empresa o Super Admin según tu rol.', icon: '🦎', highlight: null },
+      { title: 'Como Usuario', text: 'Inicia sesión con tu correo para ver tus favoritos, historial y configuración personal.', icon: '👤', highlight: '.role-card.user' },
+      { title: 'Como Empresa', text: 'Las tiendas ingresan con NIT + correo + pregunta de seguridad. Podrás agregar productos y videos.', icon: '🏪', highlight: '.role-card.empresa' },
+      { title: 'Panel de empresa', text: 'Como empresa puedes subir productos, crear videos y promociones. ¡Tu pin aparece en el mapa!', icon: '📦', highlight: null },
+      { title: 'Super Admin', text: 'El admin revisa y modera comentarios, videos y productos que no sean apropiados.', icon: '🛡️', highlight: '.role-card.admin' },
+      { title: '¡Listo! 🎉', text: 'Elige tu rol y empieza a usar Storemaps. ¡Tócame cuando necesites ayuda!', icon: '🔥', highlight: null },
+    ],
+    'forum.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'Estás en el Foro, donde la comunidad comparte recomendaciones de tiendas de Ibagué.', icon: '🦎', highlight: null },
+      { title: 'Crear publicación', text: 'Escribe un título y tu pregunta o recomendación aquí, luego toca "Publicar".', icon: '✏️', highlight: '.new-post' },
+      { title: 'Ver publicaciones', text: 'Aquí aparecen todas las preguntas y recomendaciones de la comunidad.', icon: '💬', highlight: '#forumPosts' },
+      { title: '¡Participa! 🎉', text: 'Comparte tus tiendas favoritas y ayuda a otros a descubrir el comercio local de Ibagué.', icon: '🔥', highlight: null },
+    ],
+  };
+
+  const steps = tutorials[page] || tutorials['index.html'];
+  let currentStep = 0;
+  let isOpen = false;
+
+  // Limpiar highlight anterior
+  function clearHighlight() {
+    document.querySelectorAll('.mascota-highlight').forEach(el => {
+      el.classList.remove('mascota-highlight');
+    });
+    const overlay = document.getElementById('mascota-overlay');
+    if (overlay) overlay.remove();
+  }
+
+  function highlightElement(selector) {
+    clearHighlight();
+    if (!selector) return;
+    const el = document.querySelector(selector);
+    if (!el) return;
+    el.classList.add('mascota-highlight');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function showStep(idx) {
+    const step = steps[idx];
+    if (!step) return;
+
+    // Update bubble content
+    document.getElementById('axo-step-icon').textContent = step.icon;
+    document.getElementById('axo-step-title').textContent = step.title;
+    document.getElementById('axo-step-text').textContent = step.text;
+
+    // Dots
+    document.querySelectorAll('.axo-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === idx);
+    });
+
+    // Buttons
+    const prevBtn = document.getElementById('axo-prev');
+    const nextBtn = document.getElementById('axo-next');
+    prevBtn.style.display = idx === 0 ? 'none' : 'flex';
+    nextBtn.textContent = idx === steps.length - 1 ? '¡Listo! 🎉' : 'Siguiente →';
+
+    // Highlight
+    highlightElement(step.highlight);
+
+    // Mascot expression
+    const face = document.getElementById('axo-face');
+    if (idx === steps.length - 1) {
+      face.textContent = '🎉';
+    } else if (step.highlight) {
+      face.textContent = '👀';
+    } else {
+      face.textContent = '😊';
+    }
+  }
+
+  function openTutorial() {
+    isOpen = true;
+    currentStep = 0;
+    document.getElementById('axo-bubble').style.display = 'flex';
+    document.getElementById('axo-mascot').classList.add('axo-open');
+    showStep(0);
+    // Animate mascot
+    document.getElementById('axo-mascot').style.animation = 'none';
+    setTimeout(() => {
+      document.getElementById('axo-mascot').style.animation = '';
+    }, 100);
+  }
+
+  function closeTutorial() {
+    isOpen = false;
+    document.getElementById('axo-bubble').style.display = 'none';
+    document.getElementById('axo-mascot').classList.remove('axo-open');
+    clearHighlight();
+    // Face back to smile
+    document.getElementById('axo-face').textContent = '😊';
+  }
+
+  function nextStep() {
+    if (currentStep >= steps.length - 1) {
+      closeTutorial();
+      return;
+    }
+    currentStep++;
+    showStep(currentStep);
+  }
+
+  function prevStep() {
+    if (currentStep <= 0) return;
+    currentStep--;
+    showStep(currentStep);
+  }
+
+  // Inject CSS
+  const style = document.createElement('style');
+  style.textContent = `
+    /* ===== MASCOTA WIDGET ===== */
+    #axo-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* BUBBLE */
+    #axo-bubble {
+      display: none;
+      flex-direction: column;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 0 0 2px #3b8ef8;
+      width: 280px;
+      overflow: hidden;
+      animation: axoBubbleIn .3s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    @keyframes axoBubbleIn {
+      from { opacity:0; transform: scale(0.7) translateY(20px); }
+      to   { opacity:1; transform: scale(1) translateY(0); }
+    }
+
+    .axo-bubble-header {
+      background: linear-gradient(135deg, #1d6ef5, #4fa8ff);
+      padding: 14px 16px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .axo-step-icon { font-size: 22px; }
+
+    .axo-step-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: white;
+      flex: 1;
+      margin-left: 8px;
+    }
+
+    .axo-close {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: .2s;
+      flex-shrink: 0;
+    }
+    .axo-close:hover { background: rgba(255,255,255,0.4); }
+
+    .axo-bubble-body {
+      padding: 14px 16px;
+    }
+
+    #axo-step-text {
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.55;
+    }
+
+    /* DOTS */
+    .axo-dots {
+      display: flex;
+      gap: 5px;
+      justify-content: center;
+      margin: 10px 0 8px;
+    }
+    .axo-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #d1d5db;
+      transition: .2s;
+      cursor: pointer;
+    }
+    .axo-dot.active {
+      background: #1d6ef5;
+      transform: scale(1.3);
+    }
+
+    /* BUTTONS */
+    .axo-buttons {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px 14px;
+    }
+    #axo-prev {
+      background: #f3f4f6;
+      color: #374151;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: .2s;
+    }
+    #axo-prev:hover { background: #e5e7eb; }
+    #axo-next {
+      flex: 1;
+      background: linear-gradient(135deg, #1d6ef5, #4fa8ff);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s;
+    }
+    #axo-next:hover { opacity: .9; transform: scale(1.02); }
+
+    /* MASCOT BUTTON */
+    #axo-mascot {
+      width: 80px;
+      height: 88px;
+      cursor: pointer;
+      filter: drop-shadow(0 6px 18px rgba(29,110,245,0.5));
+      transition: transform .2s;
+      animation: axoFloat 3s ease-in-out infinite;
+      position: relative;
+    }
+    #axo-mascot:hover { transform: scale(1.12); }
+    #axo-mascot.axo-open { animation: axoBounce .4s ease; filter: drop-shadow(0 6px 18px rgba(29,110,245,0.8)); }
+
+    @keyframes axoFloat {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+    @keyframes axoBounce {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.2) rotate(-5deg); }
+      70%  { transform: scale(0.95) rotate(3deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    /* TOOLTIP */
+    #axo-tooltip {
+      position: absolute;
+      bottom: 78px;
+      right: 0;
+      background: #1d6ef5;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+      pointer-events: none;
+      animation: axoTooltipPop 2s ease 1s forwards;
+      opacity: 0;
+      box-shadow: 0 4px 12px rgba(29,110,245,.4);
+    }
+    #axo-tooltip::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      right: 22px;
+      border: 6px solid transparent;
+      border-top-color: #1d6ef5;
+      border-bottom: none;
+    }
+    @keyframes axoTooltipPop {
+      0%   { opacity:0; transform: translateY(6px); }
+      15%  { opacity:1; transform: translateY(0); }
+      75%  { opacity:1; }
+      100% { opacity:0; }
+    }
+
+    /* FACE OVERLAY */
+    #axo-face {
+      position: absolute;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 16px;
+      pointer-events: none;
+      transition: .3s;
+    }
+
+    /* HIGHLIGHT */
+    .mascota-highlight {
+      outline: 3px solid #1d6ef5 !important;
+      outline-offset: 4px !important;
+      border-radius: 10px !important;
+      box-shadow: 0 0 0 6px rgba(29,110,245,0.15) !important;
+      transition: outline .3s, box-shadow .3s !important;
+      position: relative;
+      z-index: 100;
+    }
+
+    @media(max-width: 480px) {
+      #axo-container { bottom: 16px; right: 16px; }
+      #axo-bubble { width: 250px; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Inject HTML
+  const container = document.createElement('div');
+  container.id = 'axo-container';
+
+  // Dots HTML
+  const dotsHTML = steps.map((_, i) => `<div class="axo-dot${i===0?' active':''}" onclick="axoGoTo(${i})"></div>`).join('');
+
+  container.innerHTML = `
+    <div id="axo-bubble">
+      <div class="axo-bubble-header">
+        <span class="axo-step-icon" id="axo-step-icon">🦎</span>
+        <span class="axo-step-title" id="axo-step-title">¡Hola!</span>
+        <button class="axo-close" onclick="axoClose()">✕</button>
+      </div>
+      <div class="axo-bubble-body">
+        <p id="axo-step-text"></p>
+        <div class="axo-dots">${dotsHTML}</div>
+      </div>
+      <div class="axo-buttons">
+        <button id="axo-prev" onclick="axoPrev()">← Atrás</button>
+        <button id="axo-next" onclick="axoNext()">Siguiente →</button>
+      </div>
+    </div>
+
+    <div style="position:relative;">
+      <div id="axo-tooltip">¡Tócame para el tutorial! 👆</div>
+      <!-- AXOLOTL SVG — Rediseñado fiel a la imagen -->
+      <svg id="axo-mascot" onclick="axoToggle()" viewBox="0 0 240 260" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Cuerpo principal: azul medio con luz en centro-arriba -->
+          <radialGradient id="gBody" cx="42%" cy="38%" r="58%">
+            <stop offset="0%"   stop-color="#5bb8f5"/>
+            <stop offset="55%"  stop-color="#3a8fe8"/>
+            <stop offset="100%" stop-color="#1a5cc8"/>
+          </radialGradient>
+          <!-- Cabeza: más claro arriba -->
+          <radialGradient id="gHead" cx="40%" cy="32%" r="60%">
+            <stop offset="0%"   stop-color="#7ecfff"/>
+            <stop offset="50%"  stop-color="#4daef0"/>
+            <stop offset="100%" stop-color="#2070d8"/>
+          </radialGradient>
+          <!-- Branquias: más oscuras -->
+          <radialGradient id="gGill" cx="30%" cy="30%" r="70%">
+            <stop offset="0%"   stop-color="#4aaaf5"/>
+            <stop offset="100%" stop-color="#1a4ec0"/>
+          </radialGradient>
+          <!-- Patas: medianas -->
+          <radialGradient id="gPaw" cx="35%" cy="25%" r="65%">
+            <stop offset="0%"   stop-color="#6dc5ff"/>
+            <stop offset="100%" stop-color="#2878e0"/>
+          </radialGradient>
+          <!-- Cola -->
+          <radialGradient id="gTail" cx="20%" cy="20%" r="80%">
+            <stop offset="0%"   stop-color="#4aaaf5"/>
+            <stop offset="100%" stop-color="#1248b8"/>
+          </radialGradient>
+          <!-- Llama exterior -->
+          <radialGradient id="gFlame1" cx="50%" cy="80%" r="60%">
+            <stop offset="0%"   stop-color="#60e0ff"/>
+            <stop offset="60%"  stop-color="#1a90ff"/>
+            <stop offset="100%" stop-color="#0050cc" stop-opacity="0"/>
+          </radialGradient>
+          <!-- Llama interior brillo -->
+          <radialGradient id="gFlame2" cx="50%" cy="85%" r="55%">
+            <stop offset="0%"   stop-color="#ffffff"/>
+            <stop offset="40%"  stop-color="#a0eeff"/>
+            <stop offset="100%" stop-color="#40b8ff" stop-opacity="0"/>
+          </radialGradient>
+          <!-- Brillo cuerpo -->
+          <radialGradient id="gShine" cx="35%" cy="25%" r="55%">
+            <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+          </radialGradient>
+          <!-- Filtro glow llama -->
+          <filter id="flameGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- ══════════════ LLAMA AZUL ══════════════ -->
+        <!-- Partículas flotantes -->
+        <circle cx="108" cy="14" r="2.2" fill="#60ddff" opacity="0.7"/>
+        <circle cx="93"  cy="10" r="1.6" fill="#80e8ff" opacity="0.6"/>
+        <circle cx="113" cy="22" r="1.4" fill="#40ccff" opacity="0.5"/>
+        <!-- Llama exterior (azul eléctrico) -->
+        <path d="M120 42 C118 32 112 20 120 8 C114 14 108 6 110 -2 C105 6 98 2 100 12 C96 4 90 8 92 16 C88 10 82 18 90 28 C84 34 88 44 96 46 C90 52 95 60 100 56 C105 60 110 52 104 46 C112 44 116 34 120 42Z"
+              fill="url(#gFlame1)" filter="url(#flameGlow)" opacity="0.95"/>
+        <!-- Llama media -->
+        <path d="M113 40 C112 32 107 22 113 13 C108 18 104 12 105 6 C101 13 97 9 98 17 C95 11 90 16 96 24 C91 29 94 38 99 40 C95 45 98 52 102 49 C106 52 109 45 105 40 C110 38 113 32 113 40Z"
+              fill="#3ac8ff" opacity="0.85"/>
+        <!-- Llama núcleo brillante -->
+        <path d="M107 38 C106 32 103 26 107 20 C104 24 101 20 102 15 C100 20 97 17 98 23 C96 19 93 23 97 29 C94 32 96 39 100 40 C97 43 99 48 102 46 C105 48 107 43 104 40 C107 38 107 33 107 38Z"
+              fill="url(#gFlame2)" opacity="0.9"/>
+        <!-- Brillo centro llama -->
+        <ellipse cx="101" cy="36" rx="5" ry="7" fill="white" opacity="0.55" filter="url(#softGlow)"/>
+        <!-- Base llama / resplandor en cabeza -->
+        <ellipse cx="101" cy="50" rx="12" ry="5" fill="#60d8ff" opacity="0.25"/>
+
+        <!-- ══════════════ BRANQUIAS IZQUIERDA (tipo ala) ══════════════ -->
+        <!-- Base del ala -->
+        <path d="M72 90 C62 80 42 72 30 60 C28 74 36 84 50 90 C38 92 28 100 30 112 C40 106 56 100 72 98Z"
+              fill="url(#gGill)" opacity="0.9"/>
+        <!-- Deditos izquierda — 3 protuberancias redondeadas -->
+        <ellipse cx="31" cy="58" rx="8" ry="6" fill="#1a4ec0" opacity="0.95"/>
+        <ellipse cx="26" cy="72" rx="7.5" ry="5.5" fill="#1a4ec0" opacity="0.95"/>
+        <ellipse cx="27" cy="87" rx="7" ry="5.5" fill="#1a4ec0" opacity="0.95"/>
+        <!-- Contorno ala izquierda -->
+        <path d="M72 90 C62 80 44 73 31 60 C28 74 37 85 50 90 C38 93 28 101 30 112 C41 106 56 100 72 98Z"
+              fill="none" stroke="#1248b8" stroke-width="1.5" opacity="0.5"/>
+
+        <!-- ══════════════ BRANQUIAS DERECHA (tipo ala) ══════════════ -->
+        <path d="M168 90 C178 80 198 72 210 60 C212 74 204 84 190 90 C202 92 212 100 210 112 C200 106 184 100 168 98Z"
+              fill="url(#gGill)" opacity="0.9"/>
+        <!-- Deditos derecha -->
+        <ellipse cx="209" cy="58" rx="8" ry="6" fill="#1a4ec0" opacity="0.95"/>
+        <ellipse cx="214" cy="72" rx="7.5" ry="5.5" fill="#1a4ec0" opacity="0.95"/>
+        <ellipse cx="213" cy="87" rx="7" ry="5.5" fill="#1a4ec0" opacity="0.95"/>
+        <!-- Contorno ala derecha -->
+        <path d="M168 90 C178 80 196 73 209 60 C212 74 203 85 190 90 C202 93 212 101 210 112 C199 106 184 100 168 98Z"
+              fill="none" stroke="#1248b8" stroke-width="1.5" opacity="0.5"/>
+
+        <!-- ══════════════ COLA CURVADA ══════════════ -->
+        <!-- Cola larga que se curva a la izquierda-abajo como en la imagen -->
+        <path d="M100 210 C88 218 72 228 60 240 C52 248 50 256 58 258 C70 252 82 244 92 234 C96 228 100 220 104 214Z"
+              fill="url(#gTail)"/>
+        <!-- Borde más oscuro cola -->
+        <path d="M100 210 C88 218 72 228 60 240 C52 248 50 256 58 258 C70 252 82 244 92 234 C96 228 100 220 104 214Z"
+              fill="none" stroke="#1248b8" stroke-width="1.2" opacity="0.4"/>
+
+        <!-- ══════════════ CUERPO PRINCIPAL ══════════════ -->
+        <!-- Sombra/profundidad cuerpo -->
+        <ellipse cx="122" cy="170" rx="52" ry="56" fill="#1248b8" opacity="0.18"/>
+        <!-- Cuerpo gordo y redondo -->
+        <ellipse cx="118" cy="162" rx="58" ry="62" fill="url(#gBody)"/>
+
+        <!-- ══════════════ CABEZA GRANDE Y REDONDA ══════════════ -->
+        <!-- Sombra cabeza -->
+        <ellipse cx="122" cy="100" rx="56" ry="50" fill="#1248b8" opacity="0.15"/>
+        <!-- Cabeza -->
+        <ellipse cx="118" cy="97" rx="62" ry="55" fill="url(#gHead)"/>
+
+        <!-- Brillo esférico cabeza -->
+        <ellipse cx="100" cy="78" rx="28" ry="16" fill="url(#gShine)" transform="rotate(-15 100 78)"/>
+
+        <!-- ══════════════ OJOS ══════════════ -->
+        <!-- Sombra ojo izquierdo -->
+        <circle cx="95"  cy="96" r="13" fill="#0c2878" opacity="0.3"/>
+        <!-- Ojo izquierdo -->
+        <circle cx="93"  cy="94" r="13" fill="#0c2878"/>
+        <!-- Brillo ojo izquierdo -->
+        <circle cx="88"  cy="89" r="4.5" fill="white" opacity="0.7"/>
+        <circle cx="96"  cy="97" r="2"   fill="white" opacity="0.3"/>
+
+        <!-- Sombra ojo derecho -->
+        <circle cx="145" cy="96" r="13" fill="#0c2878" opacity="0.3"/>
+        <!-- Ojo derecho -->
+        <circle cx="143" cy="94" r="13" fill="#0c2878"/>
+        <!-- Brillo ojo derecho -->
+        <circle cx="138" cy="89" r="4.5" fill="white" opacity="0.7"/>
+        <circle cx="146" cy="97" r="2"   fill="white" opacity="0.3"/>
+
+        <!-- ══════════════ SONRISA ══════════════ -->
+        <path d="M108 114 Q118 123 128 114" stroke="#0c2878" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+
+        <!-- ══════════════ PATITAS FRONTALES ══════════════ -->
+        <!-- Patita izquierda -->
+        <ellipse cx="84" cy="172" rx="18" ry="13" transform="rotate(-25 84 172)" fill="url(#gPaw)"/>
+        <!-- Deditos patita izquierda -->
+        <circle cx="70" cy="163" r="7"   fill="url(#gPaw)"/>
+        <circle cx="76" cy="157" r="6.5" fill="url(#gPaw)"/>
+        <circle cx="83" cy="154" r="6"   fill="url(#gPaw)"/>
+        <!-- Línea dedos izquierda -->
+        <path d="M70 165 Q77 160 84 156" stroke="#1248b8" stroke-width="1.5" fill="none" opacity="0.5" stroke-linecap="round"/>
+
+        <!-- Patita derecha -->
+        <ellipse cx="154" cy="172" rx="18" ry="13" transform="rotate(25 154 172)" fill="url(#gPaw)"/>
+        <!-- Deditos patita derecha -->
+        <circle cx="168" cy="163" r="7"   fill="url(#gPaw)"/>
+        <circle cx="162" cy="157" r="6.5" fill="url(#gPaw)"/>
+        <circle cx="155" cy="154" r="6"   fill="url(#gPaw)"/>
+        <!-- Línea dedos derecha -->
+        <path d="M168 165 Q161 160 154 156" stroke="#1248b8" stroke-width="1.5" fill="none" opacity="0.5" stroke-linecap="round"/>
+
+        <!-- ══════════════ BARRIGA / DETALLE VIENTRE ══════════════ -->
+        <!-- Barriga clara oval -->
+        <ellipse cx="118" cy="178" rx="32" ry="26" fill="#7ecfff" opacity="0.22"/>
+        <!-- Líneas sutiles barriga como en la imagen -->
+        <path d="M104 188 Q118 196 132 188" stroke="#2878e0" stroke-width="1.8" fill="none" opacity="0.35" stroke-linecap="round"/>
+        <path d="M108 178 Q118 184 128 178" stroke="#2878e0" stroke-width="1.5" fill="none" opacity="0.25" stroke-linecap="round"/>
+
+        <!-- Brillo final cuerpo -->
+        <ellipse cx="100" cy="148" rx="20" ry="12" fill="white" opacity="0.08"/>
+      </svg>
+      <div id="axo-face">😊</div>
+    </div>
+  `;
+
+  document.body.appendChild(container);
+
+  // Global functions
+  window.axoToggle = function() {
+    if (isOpen) { closeTutorial(); } else { openTutorial(); }
+  };
+  window.axoClose = closeTutorial;
+  window.axoNext = nextStep;
+  window.axoPrev = prevStep;
+  window.axoGoTo = function(idx) {
+    currentStep = idx;
+    showStep(idx);
+  };
+
+})();
+</script>
+
+<script>
+// Actualizar nav: Perfil → Iniciar sesión si no hay sesión
+(function() {
+  function updateNav() {
+    const token = localStorage.getItem('sm_token');
+    const user = (() => { try { return JSON.parse(localStorage.getItem('sm_user')); } catch(e) { return null; } })();
+    const link = document.getElementById('navProfileLink');
+    if (!link) return;
+    if (token && user) {
+      const name = user.displayName || user.companyName || 'Perfil';
+      const initial = name.charAt(0).toUpperCase();
+      link.innerHTML = '<span style="background:#16a34a;color:white;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">' + initial + '</span> ' + name;
+      link.style.color = '#16a34a';
+      link.style.fontWeight = '700';
+    } else {
+      link.innerHTML = '<i class="fas fa-user"></i> Iniciar sesión';
+      link.style.color = '';
+      link.style.fontWeight = '';
+    }
+  }
+  document.addEventListener('DOMContentLoaded', updateNav);
+  window.addEventListener('storage', updateNav);
+})();
+</script>
+
+</body>
+</html>

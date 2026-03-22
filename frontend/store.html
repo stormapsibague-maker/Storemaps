@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storemaps | Detalle de Tienda</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+body{background:#f5f5f5;color:#374151;}
+
+/* TOPBAR */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 24px;background:white;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.logo{color:#16a34a;font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px;text-decoration:none;}
+.back-btn{display:flex;align-items:center;gap:8px;color:#6b7280;font-size:14px;font-weight:500;text-decoration:none;padding:8px 16px;border-radius:20px;transition:.2s;}
+.back-btn:hover{background:#f0fdf4;color:#16a34a;}
+
+/* NAV */
+.main-menu{display:flex;gap:6px;padding:10px 20px;background:white;border-bottom:1px solid #e5e7eb;overflow-x:auto;}
+.main-menu a{text-decoration:none;color:#555;font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;transition:.2s;white-space:nowrap;}
+.main-menu a:hover{background:#f0fdf4;color:#16a34a;}
+.main-menu a.active{color:#16a34a;font-weight:700;background:#f0fdf4;}
+
+/* HERO */
+.store-hero{position:relative;height:240px;background:linear-gradient(135deg,#16a34a,#15803d);overflow:hidden;}
+.store-hero-img{width:100%;height:100%;object-fit:cover;opacity:0.4;}
+.store-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.7) 0%,transparent 60%);}
+.store-hero-content{position:absolute;bottom:24px;left:24px;right:24px;display:flex;align-items:flex-end;gap:16px;}
+.store-avatar{width:80px;height:80px;border-radius:16px;border:3px solid white;object-fit:cover;background:#fff;flex-shrink:0;box-shadow:0 4px 16px rgba(0,0,0,0.3);}
+.store-avatar-placeholder{width:80px;height:80px;border-radius:16px;border:3px solid white;background:#16a34a;display:flex;align-items:center;justify-content:center;font-size:32px;color:white;flex-shrink:0;box-shadow:0 4px 16px rgba(0,0,0,0.3);}
+.store-hero-info h1{color:white;font-size:24px;font-weight:800;text-shadow:0 2px 8px rgba(0,0,0,0.4);}
+.store-hero-info .badges{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;}
+.badge-verified{background:rgba(22,163,74,0.9);color:white;}
+.badge-category{background:rgba(255,255,255,0.2);color:white;backdrop-filter:blur(4px);}
+.badge-basic{background:rgba(107,114,128,0.8);color:white;}
+.badge-premium{background:rgba(234,179,8,0.9);color:white;}
+
+/* LAYOUT */
+.store-layout{max-width:1100px;margin:0 auto;padding:24px 20px;display:grid;grid-template-columns:320px 1fr;gap:24px;}
+@media(max-width:768px){.store-layout{grid-template-columns:1fr;padding:16px;}}
+
+/* SIDEBAR */
+.sidebar-card{background:white;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,0.07);overflow:hidden;}
+.sidebar-card + .sidebar-card{margin-top:16px;}
+.card-header{padding:16px 20px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:10px;}
+.card-header h3{font-size:15px;font-weight:700;color:#111827;}
+.card-header i{color:#16a34a;font-size:16px;}
+.card-body{padding:16px 20px;}
+
+/* INFO LIST */
+.info-list{display:flex;flex-direction:column;gap:14px;}
+.info-item{display:flex;align-items:flex-start;gap:12px;}
+.info-item i{color:#16a34a;font-size:16px;margin-top:2px;flex-shrink:0;width:18px;}
+.info-item .label{font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+.info-item .value{font-size:14px;color:#374151;font-weight:500;}
+.info-item a.value{color:#16a34a;text-decoration:none;}
+.info-item a.value:hover{text-decoration:underline;}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#f3f4f6;}
+.stat-box{background:white;padding:16px 10px;text-align:center;}
+.stat-box .stat-num{font-size:22px;font-weight:800;color:#16a34a;}
+.stat-box .stat-label{font-size:11px;color:#9ca3af;font-weight:600;margin-top:2px;}
+
+/* SCHEDULE */
+.schedule-grid{display:flex;flex-direction:column;gap:8px;}
+.schedule-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;}
+.schedule-row .day{color:#6b7280;font-weight:500;text-transform:capitalize;}
+.schedule-row .hours{color:#374151;font-weight:600;}
+.schedule-row .closed{color:#d1d5db;}
+.schedule-row.today .day{color:#16a34a;font-weight:700;}
+.schedule-row.today .hours{color:#16a34a;}
+
+/* MAP BTN */
+.map-btn-full{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#f0fdf4;border:2px solid #16a34a;color:#16a34a;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;transition:.2s;text-decoration:none;margin-top:16px;}
+.map-btn-full:hover{background:#16a34a;color:white;}
+
+/* MAIN CONTENT */
+.main-content{}
+
+/* TABS */
+.tabs{display:flex;gap:4px;background:white;border-radius:16px;padding:6px;box-shadow:0 2px 12px rgba(0,0,0,0.07);margin-bottom:20px;}
+.tab-btn{flex:1;padding:10px 16px;border:none;background:transparent;border-radius:12px;font-size:14px;font-weight:600;color:#6b7280;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.tab-btn:hover{background:#f3f4f6;color:#374151;}
+.tab-btn.active{background:#16a34a;color:white;}
+.tab-btn .count{background:rgba(255,255,255,0.3);font-size:11px;padding:2px 7px;border-radius:10px;}
+.tab-btn:not(.active) .count{background:#f3f4f6;color:#6b7280;}
+
+/* TAB CONTENT */
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+
+/* PRODUCTS GRID */
+.products-grid{column-count:2;column-gap:14px;}
+@media(max-width:500px){.products-grid{column-count:1;}}
+.pin-card{break-inside:avoid;margin-bottom:14px;background:white;border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.08);transition:.3s;position:relative;}
+.pin-card:hover{box-shadow:0 10px 28px rgba(0,0,0,0.13);transform:translateY(-3px);}
+.pin-card img{width:100%;height:auto;display:block;}
+.pin-info{padding:12px;}
+.pin-info h3{font-size:14px;font-weight:600;margin-bottom:4px;color:#111827;}
+.pin-info .price{color:#16a34a;font-weight:800;font-size:16px;margin-bottom:4px;}
+.pin-info .category-tag{display:inline-block;font-size:11px;background:#f0fdf4;color:#16a34a;border-radius:20px;padding:3px 9px;font-weight:600;}
+
+/* VIDEOS */
+.videos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
+.video-card{border-radius:12px;overflow:hidden;position:relative;background:#111;aspect-ratio:9/16;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+.video-card video{width:100%;height:100%;object-fit:cover;opacity:0.85;}
+.video-card .play-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;color:white;opacity:0;transition:.2s;}
+.video-card:hover .play-icon{opacity:1;}
+.video-card:hover video{opacity:0.6;}
+.video-title{position:absolute;bottom:0;left:0;right:0;padding:10px;background:linear-gradient(transparent,rgba(0,0,0,0.8));color:white;font-size:12px;font-weight:500;}
+
+/* REVIEWS */
+.reviews-list{display:flex;flex-direction:column;gap:12px;}
+.review-card{background:white;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.review-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.reviewer{display:flex;align-items:center;gap:10px;}
+.reviewer-avatar{width:36px;height:36px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px;}
+.reviewer-name{font-size:14px;font-weight:600;color:#111827;}
+.reviewer-date{font-size:11px;color:#9ca3af;}
+.stars{color:#f59e0b;font-size:13px;}
+.review-text{font-size:13px;color:#6b7280;line-height:1.6;}
+
+/* DESCRIPTION */
+.description-box{background:white;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);font-size:14px;color:#374151;line-height:1.8;margin-bottom:16px;}
+
+/* EMPTY */
+.empty-tab{text-align:center;padding:48px 20px;color:#9ca3af;}
+.empty-tab i{font-size:48px;margin-bottom:12px;display:block;color:#d1d5db;}
+.empty-tab p{font-size:14px;}
+
+/* LOADING */
+.page-loader{display:flex;align-items:center;justify-content:center;min-height:60vh;flex-direction:column;gap:16px;}
+.spinner{width:50px;height:50px;border:4px solid #e5e7eb;border-top-color:#16a34a;border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#1f2937;color:white;padding:14px 24px;border-radius:30px;font-size:14px;font-weight:500;z-index:9999;transition:.3s;opacity:0;display:flex;align-items:center;gap:10px;box-shadow:0 10px 40px rgba(0,0,0,0.3);}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+/* HEART */
+.heart-btn{position:absolute;top:10px;right:10px;background:white;border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:.2s;font-size:16px;color:#d1d5db;z-index:10;}
+.heart-btn:hover{transform:scale(1.1);}
+.heart-btn.liked{color:#ef4444;}
+
+@media(max-width:768px){
+  .topbar{padding:10px 16px;}
+  .store-hero{height:200px;}
+  .store-hero-info h1{font-size:18px;}
+  .tabs .tab-btn span:not(.count){display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <a href="index.html" class="logo"><i class="fas fa-map-marker-alt"></i><b>Storemaps</b></a>
+  <a href="javascript:history.back()" class="back-btn"><i class="fas fa-arrow-left"></i> Volver</a>
+</header>
+
+<!-- NAV -->
+<nav class="main-menu">
+  <a href="index.html"><i class="fas fa-map"></i> Mapa</a>
+  <a href="discover.html"><i class="fas fa-compass"></i> Descubrir</a>
+  <a href="favorites.html"><i class="fas fa-heart"></i> Favoritos</a>
+  <a href="forum.html"><i class="fas fa-comments"></i> Foro</a>
+  <a href="videos.html"><i class="fas fa-video"></i> Videos</a>
+  <a href="profile.html" id="navProfileLink" style="margin-left:auto;"><i class="fas fa-user"></i> Iniciar sesión</a>
+</nav>
+
+<!-- CONTENIDO PRINCIPAL -->
+<div id="pageContent">
+  <div class="page-loader">
+    <div class="spinner"></div>
+    <p style="color:#6b7280;font-size:14px;">Cargando tienda...</p>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <i class="fas fa-heart" style="color:#ef4444;"></i>
+  <span id="toastMsg">Guardado en favoritos</span>
+</div>
+
+<script>
+const API_URL = 'https://storemaps-api.onrender.com/api';
+const FAVORITES_KEY = 'storemaps_favorites';
+
+// Días de la semana
+const DAYS = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+const DAY_LABELS = { sunday:'Domingo', monday:'Lunes', tuesday:'Martes', wednesday:'Miércoles', thursday:'Jueves', friday:'Viernes', saturday:'Sábado' };
+const todayKey = DAYS[new Date().getDay()];
+
+// Obtener ID de la URL
+function getStoreId() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('id') || params.get('store');
+}
+
+// ==========================================
+// CARGAR TIENDA
+// ==========================================
+async function loadStore() {
+  const id = getStoreId();
+  if (!id) {
+    showError('No se especificó una tienda.');
+    return;
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    const res = await fetch(`${API_URL}/stores/${id}`, { signal: controller.signal });
+    clearTimeout(timeout);
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    renderStore(data);
+  } catch (e) {
+    showError('No se pudo cargar la tienda. Intenta de nuevo.');
+  }
+}
+
+// ==========================================
+// RENDERIZAR
+// ==========================================
+function renderStore({ store, products = [], videos = [], reviews = [] }) {
+  document.title = `Storemaps | ${store.name}`;
+
+  const heroImg = store.images?.[0];
+  const verBadge = store.companyId?.verificationLevel === 'premium'
+    ? `<span class="badge badge-premium"><i class="fas fa-crown"></i> Premium</span>`
+    : store.companyId?.verificationLevel === 'verified'
+    ? `<span class="badge badge-verified"><i class="fas fa-check-circle"></i> Verificada</span>`
+    : `<span class="badge badge-basic"><i class="fas fa-store"></i> Básica</span>`;
+
+  const avgRating = reviews.length
+    ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1)
+    : null;
+
+  const html = `
+    <!-- HERO -->
+    <div class="store-hero">
+      ${heroImg ? `<img src="${heroImg}" class="store-hero-img" onerror="this.style.display='none'">` : ''}
+      <div class="store-hero-overlay"></div>
+      <div class="store-hero-content">
+        ${heroImg
+          ? `<img src="${heroImg}" class="store-avatar" onerror="this.outerHTML='<div class=\\"store-avatar-placeholder\\"><i class=\\"fas fa-store\\"></i></div>'">`
+          : `<div class="store-avatar-placeholder"><i class="fas fa-store"></i></div>`}
+        <div class="store-hero-info">
+          <h1>${store.name}</h1>
+          <div class="badges">
+            ${verBadge}
+            <span class="badge badge-category"><i class="fas fa-tag"></i> ${store.category}</span>
+            ${avgRating ? `<span class="badge badge-verified"><i class="fas fa-star"></i> ${avgRating}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LAYOUT -->
+    <div class="store-layout">
+
+      <!-- SIDEBAR -->
+      <aside>
+        <!-- STATS -->
+        <div class="sidebar-card">
+          <div class="stats-row">
+            <div class="stat-box">
+              <div class="stat-num">${products.length}</div>
+              <div class="stat-label">Productos</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-num">${videos.length}</div>
+              <div class="stat-label">Videos</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-num">${reviews.length}</div>
+              <div class="stat-label">Reseñas</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- INFO -->
+        <div class="sidebar-card" style="margin-top:16px;">
+          <div class="card-header">
+            <i class="fas fa-info-circle"></i>
+            <h3>Información</h3>
+          </div>
+          <div class="card-body">
+            <div class="info-list">
+              ${store.location?.address ? `
+              <div class="info-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <div>
+                  <div class="label">Dirección</div>
+                  <div class="value">${store.location.address}</div>
+                </div>
+              </div>` : ''}
+
+              ${store.phone ? `
+              <div class="info-item">
+                <i class="fas fa-phone"></i>
+                <div>
+                  <div class="label">Teléfono</div>
+                  <a href="tel:${store.phone}" class="value">${store.phone}</a>
+                </div>
+              </div>` : ''}
+
+              ${store.companyId?.phone ? `
+              <div class="info-item">
+                <i class="fab fa-whatsapp"></i>
+                <div>
+                  <div class="label">WhatsApp</div>
+                  <a href="https://wa.me/${store.companyId.phone.replace(/\D/g,'')}" target="_blank" class="value">${store.companyId.phone}</a>
+                </div>
+              </div>` : ''}
+
+              <div class="info-item">
+                <i class="fas fa-store"></i>
+                <div>
+                  <div class="label">Categoría</div>
+                  <div class="value">${store.category}</div>
+                </div>
+              </div>
+
+              ${store.createdAt ? `
+              <div class="info-item">
+                <i class="fas fa-calendar"></i>
+                <div>
+                  <div class="label">Miembro desde</div>
+                  <div class="value">${new Date(store.createdAt).toLocaleDateString('es-CO',{year:'numeric',month:'long'})}</div>
+                </div>
+              </div>` : ''}
+            </div>
+
+            ${store.location?.coordinates ? `
+            <a href="https://www.google.com/maps?q=${store.location.coordinates[1]},${store.location.coordinates[0]}" target="_blank" class="map-btn-full">
+              <i class="fas fa-map"></i> Ver en el mapa
+            </a>` : ''}
+          </div>
+        </div>
+
+        <!-- HORARIO -->
+        ${buildSchedule(store.schedule)}
+      </aside>
+
+      <!-- MAIN -->
+      <main class="main-content">
+
+        <!-- TABS -->
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('productos')">
+            <i class="fas fa-box"></i> Productos <span class="count">${products.length}</span>
+          </button>
+          <button class="tab-btn" onclick="switchTab('videos')">
+            <i class="fas fa-video"></i> Videos <span class="count">${videos.length}</span>
+          </button>
+          <button class="tab-btn" onclick="switchTab('resenas')">
+            <i class="fas fa-star"></i> Reseñas <span class="count">${reviews.length}</span>
+          </button>
+          <button class="tab-btn" onclick="switchTab('descripcion')">
+            <i class="fas fa-info"></i> <span>Info</span>
+          </button>
+        </div>
+
+        <!-- TAB: PRODUCTOS -->
+        <div class="tab-pane active" id="tab-productos">
+          ${products.length === 0
+            ? `<div class="empty-tab"><i class="fas fa-box-open"></i><p>Esta tienda aún no tiene productos publicados.</p></div>`
+            : `<div class="products-grid">${products.map(p => buildProductCard(p)).join('')}</div>`
+          }
+        </div>
+
+        <!-- TAB: VIDEOS -->
+        <div class="tab-pane" id="tab-videos">
+          ${videos.length === 0
+            ? `<div class="empty-tab"><i class="fas fa-film"></i><p>Esta tienda aún no tiene videos publicados.</p></div>`
+            : `<div class="videos-grid">${videos.map(v => buildVideoCard(v)).join('')}</div>`
+          }
+        </div>
+
+        <!-- TAB: RESEÑAS -->
+        <div class="tab-pane" id="tab-resenas">
+          ${reviews.length === 0
+            ? `<div class="empty-tab"><i class="fas fa-star"></i><p>Esta tienda aún no tiene reseñas.</p></div>`
+            : `<div class="reviews-list">${reviews.map(r => buildReviewCard(r)).join('')}</div>`
+          }
+        </div>
+
+        <!-- TAB: DESCRIPCIÓN -->
+        <div class="tab-pane" id="tab-descripcion">
+          ${store.description
+            ? `<div class="description-box">${store.description}</div>`
+            : `<div class="empty-tab"><i class="fas fa-file-alt"></i><p>Esta tienda no tiene descripción.</p></div>`
+          }
+        </div>
+
+      </main>
+    </div>
+  `;
+
+  document.getElementById('pageContent').innerHTML = html;
+}
+
+function buildProductCard(p) {
+  const isFav = isFavorited(p._id);
+  const img = p.images?.[0] || 'https://via.placeholder.com/400x400?text=Sin+Imagen';
+  const price = p.price ? `$${p.price.toLocaleString('es-CO')}` : 'Consultar';
+  return `
+    <div class="pin-card">
+      <div style="position:relative;">
+        <img src="${img}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x400?text=Sin+Imagen'">
+        <button class="heart-btn ${isFav ? 'liked' : ''}" data-id="${p._id}" onclick="toggleFav('${p._id}', event)">
+          <i class="${isFav ? 'fas' : 'far'} fa-heart"></i>
+        </button>
+      </div>
+      <div class="pin-info">
+        <h3>${p.name}</h3>
+        <div class="price">${price}</div>
+        <span class="category-tag">${p.category || ''}</span>
+      </div>
+    </div>
+  `;
+}
+
+function buildVideoCard(v) {
+  return `
+    <div class="video-card" onclick="window.location.href='videos.html'">
+      <video src="${v.videoUrl}" muted playsinline preload="metadata"></video>
+      <div class="play-icon"><i class="fas fa-play-circle"></i></div>
+      <div class="video-title">${v.title || 'Video'}</div>
+    </div>
+  `;
+}
+
+function buildReviewCard(r) {
+  const name = r.userId?.displayName || 'Usuario';
+  const initial = name.charAt(0).toUpperCase();
+  const stars = '★'.repeat(Math.round(r.rating || 0)) + '☆'.repeat(5 - Math.round(r.rating || 0));
+  const date = r.createdAt ? new Date(r.createdAt).toLocaleDateString('es-CO') : '';
+  return `
+    <div class="review-card">
+      <div class="review-header">
+        <div class="reviewer">
+          <div class="reviewer-avatar">${initial}</div>
+          <div>
+            <div class="reviewer-name">${name}</div>
+            <div class="reviewer-date">${date}</div>
+          </div>
+        </div>
+        <div class="stars">${stars}</div>
+      </div>
+      <p class="review-text">${r.comment || ''}</p>
+    </div>
+  `;
+}
+
+function buildSchedule(schedule) {
+  if (!schedule) return '';
+  const hasSome = DAYS.some(d => schedule[d]?.open);
+  if (!hasSome) return '';
+
+  const rows = DAYS.map(d => {
+    const s = schedule[d];
+    const isToday = d === todayKey;
+    const hoursHtml = (s?.open && s?.close)
+      ? `<span class="hours">${s.open} - ${s.close}</span>`
+      : `<span class="closed">Cerrado</span>`;
+    return `<div class="schedule-row ${isToday ? 'today' : ''}">
+      <span class="day">${isToday ? '→ ' : ''}${DAY_LABELS[d]}</span>
+      ${hoursHtml}
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="sidebar-card" style="margin-top:16px;">
+      <div class="card-header">
+        <i class="fas fa-clock"></i>
+        <h3>Horario</h3>
+      </div>
+      <div class="card-body">
+        <div class="schedule-grid">${rows}</div>
+      </div>
+    </div>
+  `;
+}
+
+// ==========================================
+// TABS
+// ==========================================
+function switchTab(name) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`tab-${name}`)?.classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ==========================================
+// FAVORITOS
+// ==========================================
+function getFavorites() {
+  try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || []; } catch(e) { return []; }
+}
+function isFavorited(id) {
+  return getFavorites().some(f => (f._id || f.id) === id);
+}
+function toggleFav(id, e) {
+  e.stopPropagation();
+  const btn = document.querySelector(`.heart-btn[data-id="${id}"]`);
+  let favs = getFavorites();
+  if (isFavorited(id)) {
+    favs = favs.filter(f => (f._id || f.id) !== id);
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
+    if (btn) { btn.classList.remove('liked'); btn.innerHTML = '<i class="far fa-heart"></i>'; }
+    showToast('Eliminado de favoritos');
+  } else {
+    favs.push({ _id: id });
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
+    if (btn) { btn.classList.add('liked'); btn.innerHTML = '<i class="fas fa-heart"></i>'; }
+    showToast('💚 Guardado en favoritos');
+  }
+}
+
+// ==========================================
+// UTILS
+// ==========================================
+function showError(msg) {
+  document.getElementById('pageContent').innerHTML = `
+    <div class="page-loader">
+      <i class="fas fa-exclamation-circle" style="font-size:48px;color:#ef4444;"></i>
+      <p style="color:#6b7280;font-size:14px;">${msg}</p>
+      <a href="discover.html" style="margin-top:12px;padding:10px 24px;background:#16a34a;color:white;border-radius:20px;text-decoration:none;font-weight:600;font-size:14px;">← Volver a Descubrir</a>
+    </div>`;
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// INIT
+document.addEventListener('DOMContentLoaded', loadStore);
+</script>
+
+<script>
+// Actualizar nav: Perfil → Iniciar sesión si no hay sesión
+(function() {
+  function updateNav() {
+    const token = localStorage.getItem('sm_token');
+    const user = (() => { try { return JSON.parse(localStorage.getItem('sm_user')); } catch(e) { return null; } })();
+    const link = document.getElementById('navProfileLink');
+    if (!link) return;
+    if (token && user) {
+      const name = user.displayName || user.companyName || 'Perfil';
+      const initial = name.charAt(0).toUpperCase();
+      link.innerHTML = '<span style="background:#16a34a;color:white;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">' + initial + '</span> ' + name;
+      link.style.color = '#16a34a';
+      link.style.fontWeight = '700';
+    } else {
+      link.innerHTML = '<i class="fas fa-user"></i> Iniciar sesión';
+      link.style.color = '';
+      link.style.fontWeight = '';
+    }
+  }
+  document.addEventListener('DOMContentLoaded', updateNav);
+  window.addEventListener('storage', updateNav);
+})();
+</script>
+
+</body>
+</html>

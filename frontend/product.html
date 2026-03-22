@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storemaps | Producto</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+body{background:#f5f5f5;color:#374151;}
+
+/* TOPBAR */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 24px;background:white;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.logo{color:#16a34a;font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px;text-decoration:none;}
+.back-btn{display:flex;align-items:center;gap:8px;color:#6b7280;font-size:14px;font-weight:500;text-decoration:none;padding:8px 16px;border-radius:20px;transition:.2s;border:none;background:none;cursor:pointer;}
+.back-btn:hover{background:#f0fdf4;color:#16a34a;}
+
+/* NAV */
+.main-menu{display:flex;gap:6px;padding:10px 20px;background:white;border-bottom:1px solid #e5e7eb;overflow-x:auto;}
+.main-menu a{text-decoration:none;color:#555;font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;transition:.2s;white-space:nowrap;}
+.main-menu a:hover{background:#f0fdf4;color:#16a34a;}
+.main-menu a.active{color:#16a34a;font-weight:700;background:#f0fdf4;}
+
+/* LAYOUT */
+.product-layout{max-width:1100px;margin:0 auto;padding:28px 20px;display:grid;grid-template-columns:1fr 420px;gap:28px;align-items:start;}
+@media(max-width:900px){.product-layout{grid-template-columns:1fr;padding:16px;}}
+
+/* GALLERY */
+.gallery{background:white;border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);}
+.gallery-main{position:relative;aspect-ratio:1/1;background:#f9fafb;overflow:hidden;}
+.gallery-main img{width:100%;height:100%;object-fit:contain;padding:20px;transition:.3s;}
+.gallery-thumbs{display:flex;gap:8px;padding:14px;overflow-x:auto;border-top:1px solid #f3f4f6;}
+.thumb{width:72px;height:72px;border-radius:10px;object-fit:cover;cursor:pointer;border:2px solid transparent;transition:.2s;flex-shrink:0;}
+.thumb:hover{border-color:#16a34a;}
+.thumb.active{border-color:#16a34a;box-shadow:0 0 0 2px rgba(22,163,74,0.2);}
+.no-thumb{display:none;}
+
+/* BADGE OVER IMAGE */
+.img-badge{position:absolute;top:14px;left:14px;background:#16a34a;color:white;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;}
+.img-badge.out{background:#ef4444;}
+.fav-btn-big{position:absolute;top:14px;right:14px;width:44px;height:44px;border-radius:50%;background:white;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;color:#d1d5db;box-shadow:0 2px 12px rgba(0,0,0,0.15);transition:.2s;}
+.fav-btn-big:hover{transform:scale(1.1);}
+.fav-btn-big.liked{color:#ef4444;}
+
+/* INFO CARD */
+.info-card{display:flex;flex-direction:column;gap:20px;}
+
+.product-header{background:white;border-radius:20px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,0.08);}
+.product-header .category-tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;background:#f0fdf4;color:#16a34a;border-radius:20px;padding:5px 12px;font-weight:600;margin-bottom:12px;}
+.product-header h1{font-size:24px;font-weight:800;color:#111827;line-height:1.3;margin-bottom:10px;}
+.product-header .price{font-size:32px;font-weight:800;color:#16a34a;margin-bottom:14px;}
+.product-header .price small{font-size:16px;color:#9ca3af;font-weight:400;}
+
+/* RATING */
+.rating-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.stars{color:#f59e0b;font-size:16px;letter-spacing:1px;}
+.rating-val{font-size:14px;font-weight:700;color:#374151;}
+.rating-count{font-size:13px;color:#9ca3af;}
+
+/* STOCK CHIP */
+.stock-chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:6px 14px;border-radius:20px;}
+.stock-chip.in{background:#dcfce7;color:#16a34a;}
+.stock-chip.out{background:#fee2e2;color:#ef4444;}
+
+/* VARIANTS */
+.variants-section{background:white;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.07);}
+.variants-title{font-size:13px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{padding:7px 16px;border-radius:20px;border:2px solid #e5e7eb;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;background:white;color:#374151;}
+.chip:hover{border-color:#16a34a;color:#16a34a;}
+.chip.selected{border-color:#16a34a;background:#dcfce7;color:#16a34a;}
+.color-chip{width:32px;height:32px;border-radius:50%;border:3px solid #e5e7eb;cursor:pointer;transition:.2s;}
+.color-chip:hover,.color-chip.selected{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,0.25);}
+
+/* ACTIONS */
+.actions-card{background:white;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.07);display:flex;flex-direction:column;gap:10px;}
+.btn-primary{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 24px;background:#16a34a;color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none;width:100%;}
+.btn-primary:hover{background:#15803d;transform:translateY(-1px);box-shadow:0 6px 20px rgba(22,163,74,0.35);}
+.btn-secondary{display:flex;align-items:center;justify-content:center;gap:10px;padding:13px 24px;background:#f0fdf4;color:#16a34a;border:2px solid #16a34a;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;text-decoration:none;width:100%;}
+.btn-secondary:hover{background:#dcfce7;}
+.btn-whatsapp{background:#25D366;color:white;border:none;}
+.btn-whatsapp:hover{background:#1da851;box-shadow:0 6px 20px rgba(37,211,102,0.35);}
+
+/* STORE CARD */
+.store-card{background:white;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.07);display:flex;flex-direction:column;gap:14px;}
+.store-card-header{display:flex;align-items:center;gap:14px;}
+.store-avatar{width:52px;height:52px;border-radius:12px;background:#16a34a;display:flex;align-items:center;justify-content:center;font-size:22px;color:white;flex-shrink:0;}
+.store-avatar img{width:52px;height:52px;border-radius:12px;object-fit:cover;}
+.store-name-link{font-size:16px;font-weight:700;color:#111827;text-decoration:none;}
+.store-name-link:hover{color:#16a34a;}
+.store-meta{font-size:12px;color:#9ca3af;margin-top:2px;display:flex;align-items:center;gap:5px;}
+.store-address{font-size:13px;color:#6b7280;display:flex;align-items:flex-start;gap:8px;}
+.store-address i{color:#16a34a;margin-top:2px;flex-shrink:0;}
+.btn-map{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:#f0fdf4;border:2px solid #16a34a;color:#16a34a;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;transition:.2s;text-decoration:none;}
+.btn-map:hover{background:#16a34a;color:white;}
+
+/* DESCRIPTION */
+.desc-card{background:white;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.07);}
+.desc-card h3{font-size:14px;font-weight:700;color:#111827;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.desc-card h3 i{color:#16a34a;}
+.desc-text{font-size:14px;color:#6b7280;line-height:1.8;}
+
+/* REVIEWS */
+.reviews-section{max-width:1100px;margin:0 auto;padding:0 20px 40px;}
+.section-title{font-size:18px;font-weight:800;color:#111827;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.section-title i{color:#16a34a;}
+.reviews-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.review-card{background:white;border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,0.07);}
+.review-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.reviewer{display:flex;align-items:center;gap:10px;}
+.rev-avatar{width:36px;height:36px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px;flex-shrink:0;}
+.rev-name{font-size:14px;font-weight:600;color:#111827;}
+.rev-date{font-size:11px;color:#9ca3af;}
+.rev-stars{color:#f59e0b;font-size:14px;}
+.rev-text{font-size:13px;color:#6b7280;line-height:1.7;}
+
+/* SIMILAR */
+.similar-section{max-width:1100px;margin:0 auto;padding:0 20px 40px;}
+.similar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;}
+.sim-card{background:white;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.07);cursor:pointer;transition:.3s;}
+.sim-card:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,0.12);}
+.sim-card img{width:100%;aspect-ratio:1/1;object-fit:cover;}
+.sim-info{padding:12px;}
+.sim-info h4{font-size:13px;font-weight:600;color:#111827;margin-bottom:4px;}
+.sim-info .price{font-size:14px;font-weight:800;color:#16a34a;}
+
+/* LOADER */
+.page-loader{display:flex;align-items:center;justify-content:center;min-height:70vh;flex-direction:column;gap:16px;}
+.spinner{width:50px;height:50px;border:4px solid #e5e7eb;border-top-color:#16a34a;border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#1f2937;color:white;padding:14px 24px;border-radius:30px;font-size:14px;font-weight:500;z-index:9999;transition:.3s;opacity:0;display:flex;align-items:center;gap:10px;box-shadow:0 10px 40px rgba(0,0,0,0.3);}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+@media(max-width:768px){
+  .topbar{padding:10px 16px;}
+  .product-header h1{font-size:20px;}
+  .product-header .price{font-size:26px;}
+  .similar-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <a href="index.html" class="logo"><i class="fas fa-map-marker-alt"></i><b>Storemaps</b></a>
+  <button class="back-btn" onclick="history.back()"><i class="fas fa-arrow-left"></i> Volver</button>
+</header>
+
+<!-- NAV -->
+<nav class="main-menu">
+  <a href="index.html"><i class="fas fa-map"></i> Mapa</a>
+  <a href="discover.html" class="active"><i class="fas fa-compass"></i> Descubrir</a>
+  <a href="favorites.html"><i class="fas fa-heart"></i> Favoritos</a>
+  <a href="forum.html"><i class="fas fa-comments"></i> Foro</a>
+  <a href="videos.html"><i class="fas fa-video"></i> Videos</a>
+  <a href="profile.html" id="navProfileLink" style="margin-left:auto;"><i class="fas fa-user"></i> Iniciar sesión</a>
+</nav>
+
+<!-- CONTENIDO -->
+<div id="pageContent">
+  <div class="page-loader">
+    <div class="spinner"></div>
+    <p style="color:#6b7280;font-size:14px;">Cargando producto...</p>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <i class="fas fa-heart" style="color:#ef4444;"></i>
+  <span id="toastMsg">Guardado en favoritos</span>
+</div>
+
+<script>
+const API_URL = 'https://storemaps-api.onrender.com/api';
+const FAVORITES_KEY = 'storemaps_favorites';
+
+function getProductId() {
+  return new URLSearchParams(window.location.search).get('id');
+}
+
+// ==========================================
+// CARGAR PRODUCTO
+// ==========================================
+async function loadProduct() {
+  const id = getProductId();
+  if (!id) { showError('No se especificó un producto.'); return; }
+
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 10000);
+    const res = await fetch(`${API_URL}/products/${id}`, { signal: ctrl.signal });
+    clearTimeout(t);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    // Cargar reseñas en paralelo
+    let reviews = [];
+    try {
+      const rRes = await fetch(`${API_URL}/reviews/product/${id}`);
+      if (rRes.ok) reviews = await rRes.json();
+    } catch(e) {}
+
+    renderProduct(data.product, data.similar || [], reviews);
+  } catch(e) {
+    showError('No se pudo cargar el producto. Intenta de nuevo.');
+  }
+}
+
+// ==========================================
+// RENDERIZAR PRODUCTO
+// ==========================================
+function renderProduct(p, similar, reviews) {
+  document.title = `Storemaps | ${p.name}`;
+
+  const images = p.images?.length ? p.images : ['https://via.placeholder.com/600x600?text=Sin+Imagen'];
+  const mainImg = images[0];
+  const price = p.price ? `$${p.price.toLocaleString('es-CO')}` : 'Consultar precio';
+  const inStock = p.stock > 0;
+  const isFav = isFavorited(p._id);
+  const storeId = p.storeId?._id;
+  const storeName = p.storeId?.name || 'Tienda';
+  const storeImg = p.storeId?.images?.[0];
+  const storeAddress = p.storeId?.location?.address || '';
+  const lat = p.storeLat || p.storeId?.location?.coordinates?.[1];
+  const lng = p.storeLng || p.storeId?.location?.coordinates?.[0];
+  const phone = p.storeId?.phone || '';
+
+  // Thumbs solo si hay más de 1 imagen
+  const thumbsHtml = images.length > 1
+    ? images.map((img, i) => `<img src="${img}" class="thumb ${i===0?'active':''}" onclick="switchImg(this,'${img}')" onerror="this.style.display='none'">`).join('')
+    : '';
+
+  // Tallas
+  const sizesHtml = p.sizes?.length ? `
+    <div class="variants-section">
+      <div class="variants-title"><i class="fas fa-ruler"></i> Tallas disponibles</div>
+      <div class="chips">
+        ${p.sizes.map((s,i) => `<button class="chip ${i===0?'selected':''}" onclick="selectChip(this)">${s}</button>`).join('')}
+      </div>
+    </div>` : '';
+
+  // Colores
+  const colorsHtml = p.colors?.length ? `
+    <div class="variants-section">
+      <div class="variants-title"><i class="fas fa-palette"></i> Colores</div>
+      <div class="chips">
+        ${p.colors.map((c,i) => `<button class="color-chip ${i===0?'selected':''}" style="background:${c};" title="${c}" onclick="selectChip(this)"></button>`).join('')}
+      </div>
+    </div>` : '';
+
+  // Rating
+  const ratingHtml = p.rating > 0 ? `
+    <div class="rating-row">
+      <span class="stars">${'★'.repeat(Math.round(p.rating))}${'☆'.repeat(5-Math.round(p.rating))}</span>
+      <span class="rating-val">${p.rating.toFixed(1)}</span>
+      <span class="rating-count">(${p.reviewsCount || reviews.length} reseñas)</span>
+    </div>` : '';
+
+  // WhatsApp
+  const whatsappHtml = phone ? `
+    <a href="https://wa.me/${phone.replace(/\D/g,'')}?text=Hola,%20vi%20el%20producto%20*${encodeURIComponent(p.name)}*%20en%20Storemaps%20y%20me%20interesa%20%F0%9F%9B%8D" target="_blank" class="btn-primary btn-whatsapp">
+      <i class="fab fa-whatsapp"></i> Consultar por WhatsApp
+    </a>` : '';
+
+  const html = `
+    <div class="product-layout">
+
+      <!-- GALERÍA -->
+      <div class="gallery">
+        <div class="gallery-main" id="galleryMain">
+          <img id="mainImg" src="${mainImg}" onerror="this.src='https://via.placeholder.com/600x600?text=Sin+Imagen'">
+          <span class="img-badge ${inStock?'':'out'}">${inStock ? `${p.stock} disponibles` : 'Sin stock'}</span>
+          <button class="fav-btn-big ${isFav?'liked':''}" id="favBtn" onclick="toggleFav('${p._id}')">
+            <i class="${isFav?'fas':'far'} fa-heart"></i>
+          </button>
+        </div>
+        ${thumbsHtml ? `<div class="gallery-thumbs">${thumbsHtml}</div>` : ''}
+      </div>
+
+      <!-- INFO -->
+      <div class="info-card">
+
+        <!-- HEADER -->
+        <div class="product-header">
+          <div class="category-tag"><i class="fas fa-tag"></i> ${p.category || 'General'}</div>
+          <h1>${p.name}</h1>
+          ${ratingHtml}
+          <div class="price">${price}</div>
+          <span class="stock-chip ${inStock?'in':'out'}">
+            <i class="fas fa-${inStock?'check-circle':'times-circle'}"></i>
+            ${inStock ? `${p.stock} en stock` : 'Sin stock'}
+          </span>
+        </div>
+
+        <!-- TALLAS Y COLORES -->
+        ${sizesHtml}
+        ${colorsHtml}
+
+        <!-- ACCIONES -->
+        <div class="actions-card">
+          ${whatsappHtml}
+          ${lat && lng ? `
+          <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="btn-secondary">
+            <i class="fas fa-map-marker-alt"></i> Ver tienda en el mapa
+          </a>` : ''}
+          <button class="btn-secondary" onclick="toggleFav('${p._id}')">
+            <i class="${isFav?'fas':'far'} fa-heart" id="favBtnText"></i>
+            ${isFav ? 'Guardado en favoritos' : 'Guardar en favoritos'}
+          </button>
+        </div>
+
+        <!-- TIENDA -->
+        <div class="store-card">
+          <div class="store-card-header">
+            <div class="store-avatar">
+              ${storeImg
+                ? `<img src="${storeImg}" onerror="this.outerHTML='<i class=\\"fas fa-store\\"></i>'">`
+                : '<i class="fas fa-store"></i>'}
+            </div>
+            <div>
+              <a href="store.html?id=${storeId}" class="store-name-link">${storeName}</a>
+              <div class="store-meta"><i class="fas fa-store" style="font-size:10px;"></i> Tienda en Storemaps</div>
+            </div>
+          </div>
+          ${storeAddress ? `
+          <div class="store-address">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>${storeAddress}</span>
+          </div>` : ''}
+          ${lat && lng ? `
+          <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="btn-map">
+            <i class="fas fa-map"></i> Abrir en Google Maps
+          </a>` : ''}
+          <a href="store.html?id=${storeId}" class="btn-map" style="margin-top:0;">
+            <i class="fas fa-store"></i> Ver perfil de la tienda
+          </a>
+        </div>
+
+        <!-- DESCRIPCIÓN -->
+        ${p.description ? `
+        <div class="desc-card">
+          <h3><i class="fas fa-align-left"></i> Descripción</h3>
+          <p class="desc-text">${p.description}</p>
+        </div>` : ''}
+
+      </div>
+    </div>
+
+    <!-- RESEÑAS -->
+    ${reviews.length > 0 ? `
+    <div class="reviews-section">
+      <div class="section-title"><i class="fas fa-star"></i> Reseñas (${reviews.length})</div>
+      <div class="reviews-grid">
+        ${reviews.map(r => buildReview(r)).join('')}
+      </div>
+    </div>` : ''}
+
+    <!-- SIMILARES -->
+    ${similar.length > 0 ? `
+    <div class="similar-section">
+      <div class="section-title"><i class="fas fa-th"></i> Productos similares</div>
+      <div class="similar-grid">
+        ${similar.map(s => buildSimilar(s)).join('')}
+      </div>
+    </div>` : ''}
+  `;
+
+  document.getElementById('pageContent').innerHTML = html;
+}
+
+function buildReview(r) {
+  const name = r.userId?.displayName || 'Usuario';
+  const stars = '★'.repeat(Math.round(r.rating||0)) + '☆'.repeat(5-Math.round(r.rating||0));
+  const date = r.createdAt ? new Date(r.createdAt).toLocaleDateString('es-CO') : '';
+  return `
+    <div class="review-card">
+      <div class="review-header">
+        <div class="reviewer">
+          <div class="rev-avatar">${name.charAt(0).toUpperCase()}</div>
+          <div>
+            <div class="rev-name">${name}</div>
+            <div class="rev-date">${date}</div>
+          </div>
+        </div>
+        <div class="rev-stars">${stars}</div>
+      </div>
+      <p class="rev-text">${r.comment || ''}</p>
+    </div>`;
+}
+
+function buildSimilar(p) {
+  const img = p.images?.[0] || 'https://via.placeholder.com/400x400?text=Sin+Imagen';
+  const price = p.price ? `$${p.price.toLocaleString('es-CO')}` : 'Consultar';
+  return `
+    <div class="sim-card" onclick="window.location.href='product.html?id=${p._id}'">
+      <img src="${img}" onerror="this.src='https://via.placeholder.com/400x400?text=Sin+Imagen'">
+      <div class="sim-info">
+        <h4>${p.name}</h4>
+        <div class="price">${price}</div>
+      </div>
+    </div>`;
+}
+
+// ==========================================
+// GALERÍA
+// ==========================================
+function switchImg(thumb, src) {
+  document.getElementById('mainImg').src = src;
+  document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+  thumb.classList.add('active');
+}
+
+// ==========================================
+// VARIANTES
+// ==========================================
+function selectChip(el) {
+  const parent = el.parentElement;
+  parent.querySelectorAll('.chip,.color-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ==========================================
+// FAVORITOS
+// ==========================================
+function getFavorites() {
+  try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || []; } catch(e) { return []; }
+}
+function isFavorited(id) {
+  return getFavorites().some(f => (f._id || f.id) === id);
+}
+function toggleFav(id) {
+  let favs = getFavorites();
+  const fav = isFavorited(id);
+  if (fav) {
+    favs = favs.filter(f => (f._id || f.id) !== id);
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
+    updateFavBtns(false);
+    showToast('Eliminado de favoritos');
+  } else {
+    favs.push({ _id: id });
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
+    updateFavBtns(true);
+    showToast('💚 Guardado en favoritos');
+  }
+}
+function updateFavBtns(liked) {
+  const bigBtn = document.getElementById('favBtn');
+  const textBtn = document.getElementById('favBtnText');
+  if (bigBtn) {
+    bigBtn.className = `fav-btn-big ${liked?'liked':''}`;
+    bigBtn.innerHTML = `<i class="${liked?'fas':'far'} fa-heart"></i>`;
+  }
+  if (textBtn) {
+    textBtn.className = liked ? 'fas fa-heart' : 'far fa-heart';
+    textBtn.nextSibling.textContent = liked ? ' Guardado en favoritos' : ' Guardar en favoritos';
+  }
+}
+
+// ==========================================
+// UTILS
+// ==========================================
+function showError(msg) {
+  document.getElementById('pageContent').innerHTML = `
+    <div class="page-loader">
+      <i class="fas fa-exclamation-circle" style="font-size:48px;color:#ef4444;margin-bottom:8px;"></i>
+      <p style="color:#6b7280;font-size:14px;text-align:center;">${msg}</p>
+      <a href="discover.html" style="margin-top:16px;padding:10px 24px;background:#16a34a;color:white;border-radius:20px;text-decoration:none;font-weight:600;font-size:14px;">← Volver a Descubrir</a>
+    </div>`;
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+document.addEventListener('DOMContentLoaded', loadProduct);
+</script>
+
+<script>
+// Actualizar nav: Perfil → Iniciar sesión si no hay sesión
+(function() {
+  function updateNav() {
+    const token = localStorage.getItem('sm_token');
+    const user = (() => { try { return JSON.parse(localStorage.getItem('sm_user')); } catch(e) { return null; } })();
+    const link = document.getElementById('navProfileLink');
+    if (!link) return;
+    if (token && user) {
+      const name = user.displayName || user.companyName || 'Perfil';
+      const initial = name.charAt(0).toUpperCase();
+      link.innerHTML = '<span style="background:#16a34a;color:white;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">' + initial + '</span> ' + name;
+      link.style.color = '#16a34a';
+      link.style.fontWeight = '700';
+    } else {
+      link.innerHTML = '<i class="fas fa-user"></i> Iniciar sesión';
+      link.style.color = '';
+      link.style.fontWeight = '';
+    }
+  }
+  document.addEventListener('DOMContentLoaded', updateNav);
+  window.addEventListener('storage', updateNav);
+})();
+</script>
+
+</body>
+</html>

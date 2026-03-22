@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storemaps | Videos</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+body{background:#0a0a0a;color:white;overflow:hidden;height:100vh;height:100dvh;}
+
+/* BACK BUTTON */
+.back-btn{position:fixed;top:12px;left:12px;z-index:200;background:rgba(0,0,0,0.6);border:none;width:42px;height:42px;border-radius:50%;color:white;font-size:18px;cursor:pointer;backdrop-filter:blur(8px);transition:.2s;display:flex;align-items:center;justify-content:center;text-decoration:none;border:1px solid rgba(255,255,255,0.15);}
+.back-btn:hover{background:rgba(0,0,0,0.85);transform:scale(1.05);}
+
+/* MUTE BUTTON */
+.mute-btn{position:fixed;top:12px;right:12px;z-index:200;background:rgba(0,0,0,0.6);border:none;width:42px;height:42px;border-radius:50%;color:white;font-size:18px;cursor:pointer;backdrop-filter:blur(8px);transition:.2s;border:1px solid rgba(255,255,255,0.15);}
+.mute-btn:hover{background:rgba(0,0,0,0.85);}
+
+/* VIDEOS CONTAINER */
+.videos-scroll{height:100vh;height:100dvh;overflow-y:scroll;scroll-snap-type:y mandatory;}
+.videos-scroll::-webkit-scrollbar{display:none;}
+
+/* VIDEO SLIDE */
+.video-slide{height:100vh;height:100dvh;scroll-snap-align:start;position:relative;display:flex;align-items:center;justify-content:center;background:#000;}
+
+/* Video vertical (portrait) */
+.video-slide video{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;background:#000;}
+
+/* Video horizontal (landscape) - se muestra con letterbox en móvil */
+.video-slide.landscape-video video{object-fit:contain;background:#000;}
+
+.video-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);position:absolute;top:0;left:0;}
+.video-placeholder i{font-size:80px;color:rgba(255,255,255,0.2);}
+.play-icon{position:absolute;font-size:64px;color:rgba(255,255,255,0.8);cursor:pointer;z-index:10;transition:.3s;}
+.play-icon:hover{color:white;transform:scale(1.1);}
+
+/* PAUSE OVERLAY ICON */
+.pause-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);z-index:15;pointer-events:none;opacity:0;transition:opacity .15s;}
+.pause-overlay i{font-size:72px;color:rgba(255,255,255,0.9);filter:drop-shadow(0 4px 12px rgba(0,0,0,0.6));}
+.pause-overlay.show{animation:pausePop .5s ease forwards;}
+@keyframes pausePop{0%{transform:translate(-50%,-50%) scale(0);opacity:0;}30%{transform:translate(-50%,-50%) scale(1.1);opacity:1;}70%{transform:translate(-50%,-50%) scale(1);opacity:1;}100%{transform:translate(-50%,-50%) scale(1);opacity:0;}}
+
+/* LOADING */
+.loading-slide{height:100vh;height:100dvh;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+.loading-slide i{font-size:48px;color:#16a34a;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* GRADIENT OVERLAY */
+.video-overlay{position:absolute;bottom:0;left:0;right:0;height:70%;background:linear-gradient(transparent,rgba(0,0,0,0.9));z-index:5;pointer-events:none;}
+
+/* INFO BOTTOM */
+.video-info{position:absolute;bottom:56px;left:16px;right:100px;z-index:10;}
+.store-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(22,163,74,0.9);color:white;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:10px;cursor:pointer;transition:.2s;}
+.store-badge:hover{background:#16a34a;transform:scale(1.05);}
+.video-title{font-size:17px;font-weight:700;margin-bottom:6px;line-height:1.4;text-shadow:0 2px 4px rgba(0,0,0,0.5);}
+.video-desc{font-size:14px;color:rgba(255,255,255,0.8);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px;}
+.video-price{color:#4ade80;font-size:16px;font-weight:800;margin-top:6px;text-shadow:0 2px 4px rgba(0,0,0,0.5);}
+.product-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:20px;padding:6px 14px;font-size:12px;margin-top:10px;cursor:pointer;transition:.2s;}
+.product-tag:hover{background:rgba(255,255,255,0.25);}
+
+/* ACTIONS RIGHT */
+.video-actions{position:absolute;right:12px;bottom:80px;z-index:10;display:flex;flex-direction:column;align-items:center;gap:20px;}
+.action-btn{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:.2s;}
+.action-btn i{font-size:32px;color:white;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));transition:.2s;}
+.action-btn span{font-size:12px;font-weight:600;color:rgba(255,255,255,0.9);text-shadow:0 1px 2px rgba(0,0,0,0.5);}
+.action-btn:hover i{transform:scale(1.15);}
+.action-btn.liked i{color:#ef4444;}
+.action-btn.liked i{animation:heartPop .4s ease;}
+@keyframes heartPop{0%{transform:scale(1);}50%{transform:scale(1.3);}100%{transform:scale(1);}}
+
+/* STORE AVATAR */
+.store-avatar{width:50px;height:50px;border-radius:50%;border:3px solid white;object-fit:cover;cursor:pointer;transition:.2s;box-shadow:0 4px 12px rgba(0,0,0,0.3);}
+.store-avatar:hover{transform:scale(1.1);}
+
+/* PROGRESS BAR CONTAINER (clickeable) */
+.progress-container{position:absolute;bottom:0;left:0;right:0;height:22px;z-index:20;cursor:pointer;display:flex;align-items:flex-end;padding-bottom:0;}
+.progress-track{width:100%;height:3px;background:rgba(255,255,255,0.25);position:relative;transition:height .15s;}
+.progress-container:hover .progress-track{height:5px;}
+.progress-bar{height:100%;background:#16a34a;width:0%;transition:width 0.1s linear;position:relative;}
+.progress-bar::after{content:'';position:absolute;right:-5px;top:50%;transform:translateY(-50%) scale(0);width:12px;height:12px;border-radius:50%;background:white;transition:transform .15s;}
+.progress-container:hover .progress-bar::after{transform:translateY(-50%) scale(1);}
+
+/* SCROLL HINT */
+.scroll-hint{position:fixed;right:50%;transform:translateX(50%);bottom:40px;z-index:100;display:flex;flex-direction:column;align-items:center;gap:4px;opacity:.7;animation:bounce 2s infinite;}
+.scroll-hint i{font-size:20px;color:white;}
+.scroll-hint span{font-size:11px;color:rgba(255,255,255,.8);}
+@keyframes bounce{0%,100%{transform:translateX(50%) translateY(0);}50%{transform:translateX(50%) translateY(-6px);}}
+
+/* COMMENTS MODAL */
+.comments-modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+.comments-modal.active{display:flex;}
+.comments-container{width:100%;max-width:600px;max-height:70vh;background:#1a1a1a;border-radius:20px 20px 0 0;display:flex;flex-direction:column;animation:slideUp 0.3s ease;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.comments-header{padding:16px 20px;border-bottom:1px solid #333;display:flex;justify-content:space-between;align-items:center;}
+.comments-header h3{font-size:16px;font-weight:600;}
+.comments-header button{background:none;border:none;color:white;font-size:24px;cursor:pointer;}
+.comments-list{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+.comment-item{display:flex;gap:12px;}
+.comment-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#16a34a,#22c55e);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;flex-shrink:0;}
+.comment-body{flex:1;background:#252525;padding:10px 14px;border-radius:12px;}
+.comment-author{font-size:12px;font-weight:700;color:#16a34a;margin-bottom:2px;}
+.comment-text{font-size:13px;color:#e5e5e5;line-height:1.4;}
+.comment-time{font-size:11px;color:#666;margin-top:4px;}
+.comments-input{padding:16px 20px;border-top:1px solid #333;display:flex;gap:10px;}
+.comments-input input{flex:1;padding:12px 16px;border:none;border-radius:24px;background:#252525;color:white;font-size:14px;outline:none;}
+.comments-input input::placeholder{color:#666;}
+.comments-input button{background:#16a34a;color:white;border:none;padding:12px 20px;border-radius:24px;font-weight:600;cursor:pointer;transition:.2s;}
+.comments-input button:hover{background:#15803d;}
+.login-msg{text-align:center;padding:20px;color:#666;font-size:14px;}
+.login-msg a{color:#16a34a;font-weight:600;}
+
+/* TOAST */
+.toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%) translateY(100px);background:#1f2937;color:white;padding:14px 28px;border-radius:30px;font-size:14px;font-weight:600;z-index:400;transition:.3s;opacity:0;display:flex;align-items:center;gap:10px;box-shadow:0 10px 40px rgba(0,0,0,0.5);}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.toast i{font-size:18px;}
+.toast.success{background:#16a34a;}
+.toast.error{background:#ef4444;}
+
+/* EMPTY STATE */
+.empty-slide{height:100vh;height:100dvh;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:40px;}
+.empty-slide i{font-size:64px;color:#333;}
+.empty-slide h3{color:#666;font-size:18px;}
+.empty-slide a{color:#16a34a;text-decoration:none;font-weight:600;margin-top:10px;}
+
+/* DOUBLE TAP HEART */
+.double-tap-heart{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);font-size:100px;color:#ef4444;opacity:0;pointer-events:none;z-index:50;text-shadow:0 4px 20px rgba(0,0,0,0.5);}
+.double-tap-heart.show{animation:doubleTapHeart 0.6s ease;}
+@keyframes doubleTapHeart{0%{transform:translate(-50%,-50%) scale(0);opacity:0;}50%{transform:translate(-50%,-50%) scale(1.2);opacity:1;}100%{transform:translate(-50%,-50%) scale(1);opacity:0;}}
+
+/* RESPONSIVE MÓVIL */
+@media(max-width:768px){
+  .video-info{bottom:48px;right:86px;}
+  .video-actions{bottom:70px;gap:16px;}
+  .action-btn i{font-size:28px;}
+  .video-title{font-size:15px;}
+  .video-desc{font-size:13px;}
+}
+@media(max-width:480px){
+  .video-actions{right:8px;gap:14px;}
+  .video-info{left:12px;right:80px;bottom:44px;}
+  .action-btn i{font-size:26px;}
+  .back-btn,.mute-btn{width:38px;height:38px;font-size:16px;}
+}
+</style>
+</head>
+<body>
+
+<!-- BACK BUTTON -->
+<a href="index.html" class="back-btn" title="Volver al inicio">
+  <i class="fas fa-arrow-left"></i>
+</a>
+
+<!-- MUTE BUTTON -->
+<button class="mute-btn" id="muteBtn" onclick="toggleMute()">
+  <i class="fas fa-volume-mute"></i>
+</button>
+
+<!-- VIDEOS -->
+<div class="videos-scroll" id="videosScroll">
+  <div class="loading-slide">
+    <i class="fas fa-spinner fa-spin" style="font-size:48px;color:#16a34a;"></i>
+    <span style="color:#888;font-size:14px;margin-top:8px;">Cargando videos...</span>
+    <span style="color:#555;font-size:12px;margin-top:4px;" id="loadingSubtext"></span>
+  </div>
+</div>
+
+<!-- DOUBLE TAP HEART -->
+<div class="double-tap-heart" id="doubleTapHeart">
+  <i class="fas fa-heart"></i>
+</div>
+
+<!-- SCROLL HINT -->
+<div class="scroll-hint" id="scrollHint">
+  <i class="fas fa-chevron-up"></i>
+  <span>Desliza para ver más</span>
+</div>
+
+<!-- COMMENTS MODAL -->
+<div class="comments-modal" id="commentsModal">
+  <div class="comments-container">
+    <div class="comments-header">
+      <h3><i class="fas fa-comment"></i> Comentarios</h3>
+      <button onclick="closeComments()">&times;</button>
+    </div>
+    <div class="comments-list" id="commentsList"></div>
+    <div class="comments-input" id="commentsInput">
+      <input type="text" id="commentText" placeholder="Escribe un comentario..." onkeydown="if(event.key==='Enter')postComment()">
+      <button onclick="postComment()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <i class="fas fa-check-circle"></i>
+  <span id="toastMsg">Operación exitosa</span>
+</div>
+
+<script>
+// ==========================================
+// CONFIGURACIÓN
+// ==========================================
+const API_URL = 'https://storemaps-api.onrender.com/api';
+
+// ==========================================
+// ESTADO
+// ==========================================
+let videos = [];
+let currentVideoIndex = 0;
+let currentVideoId = null;
+let isMuted = true;
+let likedVideos = new Set();
+let user = null;
+
+// ==========================================
+// INICIALIZACIÓN
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+  user = getUser();
+  try {
+    const saved = JSON.parse(localStorage.getItem('sm_liked_videos') || '[]');
+    likedVideos = new Set(saved);
+  } catch(e) { likedVideos = new Set(); }
+  loadVideos();
+  document.addEventListener('keydown', handleKeyboard);
+});
+
+// ==========================================
+// GEOLOCALIZACIÓN
+// ==========================================
+function loadUserLocation() {
+  const saved = localStorage.getItem('userLocation');
+  if (saved) {
+    try {
+      const loc = JSON.parse(saved);
+      if (loc && loc.lat) {
+        document.getElementById('locationText').textContent = 'Cerca de ti';
+        return loc;
+      }
+    } catch(e) {}
+  }
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        localStorage.setItem('userLocation', JSON.stringify(loc));
+        document.getElementById('locationText').textContent = 'Mi ubicación';
+      },
+      () => { document.getElementById('locationText').textContent = 'Ibagué'; },
+      { timeout: 5000 }
+    );
+  }
+  return { lat: 4.4447, lng: -75.2424 };
+}
+
+function getUser() {
+  try {
+    return JSON.parse(localStorage.getItem('sm_user'));
+  } catch(e) {
+    return null;
+  }
+}
+
+function getToken() {
+  return localStorage.getItem('sm_token');
+}
+
+function isLoggedIn() {
+  return !!getToken();
+}
+
+// ==========================================
+// CARGAR VIDEOS
+// ==========================================
+async function loadVideos() {
+  const container = document.getElementById('videosScroll');
+
+  // Mostrar loading con aviso de servidor dormido
+  container.innerHTML = `
+    <div class="loading-slide">
+      <i class="fas fa-spinner fa-spin" style="font-size:48px;color:#16a34a;"></i>
+      <span style="color:#888;font-size:14px;margin-top:8px;">Cargando videos...</span>
+      <span style="color:#555;font-size:12px;margin-top:4px;" id="loadingSubtext"></span>
+    </div>`;
+
+  // Si tarda más de 5s, avisar que el servidor está despertando
+  const slowTimer = setTimeout(() => {
+    const sub = document.getElementById('loadingSubtext');
+    if (sub) sub.textContent = 'Despertando servidor, espera unos segundos...';
+  }, 5000);
+
+  try {
+    const loc = loadUserLocation();
+    const params = new URLSearchParams();
+    params.append('lat', (loc && loc.lat) ? loc.lat : 4.4447);
+    params.append('lng', (loc && loc.lng) ? loc.lng : -75.2424);
+
+    // Timeout de 50s para Render free tier (se duerme con inactividad)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 50000);
+
+    const response = await fetch(`${API_URL}/videos/feed?${params}`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    clearTimeout(slowTimer);
+
+    if (!response.ok) throw new Error(`Error del servidor: HTTP ${response.status}`);
+
+    videos = await response.json();
+
+    if (!Array.isArray(videos) || videos.length === 0) {
+      showEmptyState();
+      return;
+    }
+
+    renderVideos();
+    setupIntersectionObserver();
+    document.getElementById('videosScroll').addEventListener('scroll', hideScrollHint, {once: true});
+
+  } catch (error) {
+    clearTimeout(slowTimer);
+    console.error('Error cargando videos:', error);
+    const isTimeout = error.name === 'AbortError';
+    container.innerHTML = `
+      <div class="empty-slide">
+        <i class="fas fa-${isTimeout ? 'clock' : 'exclamation-circle'}" style="font-size:56px;color:#555;"></i>
+        <h3 style="color:#888;">${isTimeout ? 'El servidor tardó demasiado' : 'Error al cargar videos'}</h3>
+        <p style="color:#555;font-size:13px;margin-top:4px;">${isTimeout ? 'El servidor estaba dormido. Ya despertó, intenta de nuevo.' : error.message}</p>
+        <a href="#" onclick="loadVideos();return false;" style="margin-top:16px;background:#16a34a;color:white;padding:10px 28px;border-radius:24px;text-decoration:none;font-weight:700;display:inline-flex;align-items:center;gap:8px;">
+          <i class="fas fa-redo"></i> Reintentar
+        </a>
+      </div>`;
+  }
+}
+
+function showEmptyState() {
+  document.getElementById('videosScroll').innerHTML = `
+    <div class="empty-slide">
+      <i class="fas fa-video-slash"></i>
+      <h3>No hay videos disponibles</h3>
+      <p style="color:#666;font-size:14px;">Las tiendas aún no han subido videos</p>
+      <a href="discover.html"><i class="fas fa-compass"></i> Explorar productos</a>
+    </div>
+  `;
+  document.getElementById('scrollHint').style.display = 'none';
+}
+
+// ==========================================
+// RENDERIZAR VIDEOS
+// ==========================================
+function renderVideos() {
+  const container = document.getElementById('videosScroll');
+  container.innerHTML = '';
+  
+  videos.forEach((video, index) => {
+    const slide = createVideoSlide(video, index);
+    container.appendChild(slide);
+  });
+}
+
+function createVideoSlide(video, index) {
+  const slide = document.createElement('div');
+  slide.className = 'video-slide';
+  slide.dataset.index = index;
+  slide.dataset.id = video._id;
+  
+  const storeName = video.storeId?.name || 'Tienda';
+  const caption = video.caption || 'Video de la tienda';
+  const likes = video.likes || 0;
+  const comments = video.comments?.length || 0;
+  const productName = video.productId?.name;
+  const productPrice = video.productId?.price;
+  
+  // Video o placeholder
+  const videoHTML = video.url ? `
+    <video src="${video.url}" loop playsinline muted preload="metadata" 
+           poster="${video.thumbnail || ''}"
+           onclick="togglePlay(this)"
+           ondblclick="handleDoubleTap('${video._id}')"></video>
+    <div class="pause-overlay" id="pause-overlay-${video._id}"><i class="fas fa-pause"></i></div>
+  ` : `
+    <div class="video-placeholder">
+      <i class="fas fa-store"></i>
+    </div>
+    <i class="fas fa-play play-icon" onclick="showToast('Video no disponible', 'error')"></i>
+  `;
+  
+  slide.innerHTML = `
+    ${videoHTML}
+    <div class="video-overlay"></div>
+    
+    <div class="video-info">
+      <div class="store-badge" onclick="goToStore('${video.storeId?._id}')">
+        <i class="fas fa-store"></i> ${storeName}
+      </div>
+      <div class="video-title">${caption}</div>
+      ${productName ? `<div class="video-desc">📦 ${productName}</div>` : ''}
+      ${productPrice ? `<div class="video-price">$${Number(productPrice).toLocaleString('es-CO')}</div>` : ''}
+      ${video.productId ? `
+      <span class="product-tag" onclick="goToProduct('${video.productId?._id}')">
+        <i class="fas fa-tag"></i> Ver producto
+      </span>
+      ` : ''}
+    </div>
+    
+    <div class="video-actions">
+      <div class="action-btn" id="like-${video._id}" onclick="likeVideo('${video._id}')">
+        <i class="far fa-heart"></i>
+        <span id="likes-${video._id}">${formatNumber(likes)}</span>
+      </div>
+      <div class="action-btn" onclick="showComments('${video._id}')">
+        <i class="fas fa-comment"></i>
+        <span>${formatNumber(comments)}</span>
+      </div>
+      <div class="action-btn" onclick="shareVideo('${video._id}')">
+        <i class="fas fa-share"></i>
+        <span>Compartir</span>
+      </div>
+      <div class="action-btn" onclick="goToStore('${video.storeId?._id}')">
+        <i class="fas fa-map-marker-alt"></i>
+        <span>Ir</span>
+      </div>
+    </div>
+    
+    <div class="progress-container" id="progress-container-${video._id}" onclick="seekVideo(event, '${video._id}')">
+      <div class="progress-track">
+        <div class="progress-bar" id="progress-${video._id}"></div>
+      </div>
+    </div>
+  `;
+
+  // Detectar si es video horizontal después de que cargue metadata
+  if (video.url) {
+    const videoEl = slide.querySelector('video');
+    videoEl.addEventListener('loadedmetadata', () => {
+      if (videoEl.videoWidth > videoEl.videoHeight) {
+        slide.classList.add('landscape-video');
+      }
+    });
+  }
+  
+  return slide;
+}
+
+// ==========================================
+// REPRODUCCIÓN
+// ==========================================
+function setupIntersectionObserver() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const video = entry.target.querySelector('video');
+      const progressBar = entry.target.querySelector('.progress-bar');
+      
+      if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
+        currentVideoIndex = parseInt(entry.target.dataset.index);
+        currentVideoId = entry.target.dataset.id;
+        
+        if (video) {
+          video.muted = isMuted;
+          video.play().catch(() => {});
+          updateProgress(video, progressBar);
+        }
+      } else {
+        if (video) {
+          video.pause();
+          video.currentTime = 0;
+          if (progressBar) progressBar.style.width = '0%';
+          // Ocultar overlay de pausa al salir del slide
+          const overlay = document.getElementById(`pause-overlay-${entry.target.dataset.id}`);
+          if (overlay) { overlay.style.opacity = ''; overlay.classList.remove('show'); }
+        }
+      }
+    });
+  }, { threshold: [0.6] });
+  
+  document.querySelectorAll('.video-slide').forEach(slide => {
+    observer.observe(slide);
+  });
+}
+
+function togglePlay(video) {
+  const slide = video.closest('.video-slide');
+  const videoId = slide?.dataset.id;
+  const overlay = videoId ? document.getElementById(`pause-overlay-${videoId}`) : null;
+
+  if (video.paused) {
+    video.play();
+    // No mostramos overlay al reanudar (solo al pausar)
+  } else {
+    video.pause();
+    // Mostrar ícono de pausa hasta que se vuelva a dar click
+    if (overlay) {
+      overlay.classList.remove('show');
+      // Forzar reflow para reiniciar animación
+      void overlay.offsetWidth;
+      overlay.classList.add('show');
+      // Mantener icono visible mientras esté pausado
+      overlay.style.opacity = '1';
+      overlay.style.transform = 'none';
+      overlay.querySelector('i').style.opacity = '0.85';
+    }
+  }
+}
+
+// Cuando el video se reanuda (por el observer u otra vía), ocultamos el overlay
+document.addEventListener('play', (e) => {
+  if (e.target.tagName === 'VIDEO') {
+    const slide = e.target.closest('.video-slide');
+    const videoId = slide?.dataset.id;
+    if (videoId) {
+      const overlay = document.getElementById(`pause-overlay-${videoId}`);
+      if (overlay) {
+        overlay.style.opacity = '';
+        overlay.style.transform = '';
+        overlay.querySelector('i').style.opacity = '';
+        overlay.classList.remove('show');
+      }
+    }
+  }
+}, true);
+
+function seekVideo(event, videoId) {
+  const container = document.getElementById(`progress-container-${videoId}`);
+  const slide = container?.closest('.video-slide');
+  const videoEl = slide?.querySelector('video');
+  if (!videoEl || !videoEl.duration) return;
+
+  const rect = container.getBoundingClientRect();
+  const clickX = event.clientX - rect.left;
+  const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+  videoEl.currentTime = ratio * videoEl.duration;
+}
+
+function toggleMute() {
+  isMuted = !isMuted;
+  const btn = document.getElementById('muteBtn');
+  btn.innerHTML = isMuted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+  
+  document.querySelectorAll('video').forEach(v => {
+    v.muted = isMuted;
+  });
+}
+
+function updateProgress(video, bar) {
+  if (!video || !bar) return;
+  video.addEventListener('timeupdate', () => {
+    if (video.duration) {
+      const progress = (video.currentTime / video.duration) * 100;
+      bar.style.width = progress + '%';
+    }
+  });
+}
+
+// ==========================================
+// INTERACCIONES
+// ==========================================
+function handleDoubleTap(videoId) {
+  // Mostrar corazón flotante
+  const heart = document.getElementById('doubleTapHeart');
+  heart.classList.add('show');
+  setTimeout(() => heart.classList.remove('show'), 600);
+  
+  // Dar like
+  likeVideo(videoId);
+}
+
+async function likeVideo(videoId) {
+  if (!isLoggedIn()) {
+    showToast('Inicia sesión para dar like', 'error');
+    return;
+  }
+  
+  const btn = document.getElementById(`like-${videoId}`);
+  const icon = btn.querySelector('i');
+  const countEl = document.getElementById(`likes-${videoId}`);
+  
+  // Optimistic UI
+  const isLiked = btn.classList.contains('liked');
+  let currentLikes = parseInt(countEl.textContent.replace('k', '000')) || 0;
+  
+  if (isLiked) {
+    btn.classList.remove('liked');
+    icon.className = 'far fa-heart';
+    countEl.textContent = formatNumber(currentLikes - 1);
+  } else {
+    btn.classList.add('liked');
+    icon.className = 'fas fa-heart';
+    countEl.textContent = formatNumber(currentLikes + 1);
+  }
+  
+  try {
+    const response = await fetch(`${API_URL}/videos/${videoId}/like`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${getToken()}`
+      }
+    });
+    
+    if (!response.ok) throw new Error('Error');
+    
+    const data = await response.json();
+    countEl.textContent = formatNumber(data.likes);
+    
+  } catch (error) {
+    // Revertir en error
+    if (isLiked) {
+      btn.classList.add('liked');
+      icon.className = 'fas fa-heart';
+    } else {
+      btn.classList.remove('liked');
+      icon.className = 'far fa-heart';
+    }
+    countEl.textContent = formatNumber(currentLikes);
+    showToast('Error al dar like', 'error');
+  }
+}
+
+// ==========================================
+// COMENTARIOS
+// ==========================================
+async function showComments(videoId) {
+  currentVideoId = videoId;
+  const video = videos.find(v => v._id === videoId);
+  if (!video) return;
+  
+  const modal = document.getElementById('commentsModal');
+  const list = document.getElementById('commentsList');
+  const input = document.getElementById('commentsInput');
+  
+  // Renderizar comentarios existentes
+  list.innerHTML = (video.comments || []).map(c => `
+    <div class="comment-item">
+      <div class="comment-avatar">${(c.userId?.displayName || 'U').charAt(0)}</div>
+      <div class="comment-body">
+        <div class="comment-author">${c.userId?.displayName || 'Usuario'}</div>
+        <div class="comment-text">${c.text}</div>
+        <div class="comment-time">${timeAgo(c.createdAt)}</div>
+      </div>
+    </div>
+  `).join('');
+  
+  // Mostrar/ocultar input según login
+  if (!isLoggedIn()) {
+    input.innerHTML = `<div class="login-msg"><a href="profile.html">Inicia sesión</a> para comentar</div>`;
+  } else {
+    input.innerHTML = `
+      <input type="text" id="commentText" placeholder="Escribe un comentario..." onkeydown="if(event.key==='Enter')postComment()">
+      <button onclick="postComment()"><i class="fas fa-paper-plane"></i></button>
+    `;
+  }
+  
+  modal.classList.add('active');
+}
+
+function closeComments() {
+  document.getElementById('commentsModal').classList.remove('active');
+}
+
+async function postComment() {
+  const input = document.getElementById('commentText');
+  const text = input.value.trim();
+  
+  if (!text || !currentVideoId) return;
+  
+  try {
+    const response = await fetch(`${API_URL}/videos/${currentVideoId}/comment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+      },
+      body: JSON.stringify({ text })
+    });
+    
+    if (!response.ok) throw new Error('Error');
+    
+    const comments = await response.json();
+    
+    // Actualizar UI
+    const list = document.getElementById('commentsList');
+    const newComment = comments[comments.length - 1];
+    list.insertAdjacentHTML('beforeend', `
+      <div class="comment-item">
+        <div class="comment-avatar">${(user?.displayName || 'T').charAt(0)}</div>
+        <div class="comment-body">
+          <div class="comment-author">${user?.displayName || 'Tú'}</div>
+          <div class="comment-text">${text}</div>
+          <div class="comment-time">hace un momento</div>
+        </div>
+      </div>
+    `);
+    
+    // Actualizar contador en el video
+    const video = videos.find(v => v._id === currentVideoId);
+    if (video) {
+      video.comments = comments;
+      const countEl = document.querySelector(`[data-id="${currentVideoId}"] .action-btn:nth-child(2) span`);
+      if (countEl) countEl.textContent = formatNumber(comments.length);
+    }
+    
+    input.value = '';
+    showToast('Comentario enviado', 'success');
+    
+  } catch (error) {
+    showToast('Error al comentar', 'error');
+  }
+}
+
+// ==========================================
+// NAVEGACIÓN
+// ==========================================
+function goToStore(storeId) {
+  if (storeId) {
+    window.location.href = `index.html?store=${storeId}`;
+  }
+}
+
+function goToProduct(productId) {
+  if (productId) {
+    window.location.href = `discover.html?product=${productId}`;
+  }
+}
+
+function shareVideo(videoId) {
+  const url = `${window.location.origin}/videos.html?video=${videoId}`;
+  
+  if (navigator.share) {
+    navigator.share({
+      title: 'Mira este video en Storemaps',
+      text: 'Video de tienda local en Ibagué',
+      url: url
+    });
+  } else {
+    navigator.clipboard.writeText(url);
+    showToast('Link copiado al portapapeles', 'success');
+  }
+}
+
+function handleKeyboard(e) {
+  const container = document.getElementById('videosScroll');
+  
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    currentVideoIndex = Math.min(currentVideoIndex + 1, videos.length - 1);
+    const slide = container.children[currentVideoIndex];
+    if (slide) slide.scrollIntoView({ behavior: 'smooth' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    currentVideoIndex = Math.max(currentVideoIndex - 1, 0);
+    const slide = container.children[currentVideoIndex];
+    if (slide) slide.scrollIntoView({ behavior: 'smooth' });
+  } else if (e.key === 'm' || e.key === 'M') {
+    toggleMute();
+  }
+}
+
+function hideScrollHint() {
+  document.getElementById('scrollHint').style.opacity = '0';
+  setTimeout(() => {
+    document.getElementById('scrollHint').style.display = 'none';
+  }, 300);
+}
+
+function searchVideos(query) {
+  if (!query.trim()) {
+    renderVideos();
+    setupIntersectionObserver();
+    return;
+  }
+  
+  const filtered = videos.filter(v => {
+    const caption = (v.caption || '').toLowerCase();
+    const store = (v.storeId?.name || '').toLowerCase();
+    const product = (v.productId?.name || '').toLowerCase();
+    const q = query.toLowerCase();
+    return caption.includes(q) || store.includes(q) || product.includes(q);
+  });
+  
+  // Renderizar filtrados (simplificado)
+  const container = document.getElementById('videosScroll');
+  container.innerHTML = '';
+  
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="empty-slide">
+        <i class="fas fa-search"></i>
+        <h3>No se encontraron videos</h3>
+        <p style="color:#666;">Intenta con otra búsqueda</p>
+      </div>
+    `;
+    return;
+  }
+  
+  filtered.forEach((video, index) => {
+    const slide = createVideoSlide(video, index);
+    container.appendChild(slide);
+  });
+  
+  setupIntersectionObserver();
+}
+
+// ==========================================
+// UTILIDADES
+// ==========================================
+function formatNumber(num) {
+  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+  if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+  return num.toString();
+}
+
+function timeAgo(date) {
+  const seconds = Math.floor((Date.now() - new Date(date)) / 1000);
+  if (seconds < 60) return 'hace un momento';
+  if (seconds < 3600) return `hace ${Math.floor(seconds / 60)} min`;
+  if (seconds < 86400) return `hace ${Math.floor(seconds / 3600)}h`;
+  return `hace ${Math.floor(seconds / 86400)} días`;
+}
+
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('toast');
+  const msg = document.getElementById('toastMsg');
+  const icon = toast.querySelector('i');
+  
+  msg.textContent = message;
+  toast.className = `toast ${type}`;
+  
+  if (type === 'success') icon.className = 'fas fa-check-circle';
+  else if (type === 'error') icon.className = 'fas fa-exclamation-circle';
+  
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// Cerrar modal al hacer click fuera
+document.getElementById('commentsModal').addEventListener('click', (e) => {
+  if (e.target.id === 'commentsModal') closeComments();
+});
+</script>
+<script>
+/* ============================================================
+   MASCOTA STOREMAPS — Ajolote azul con llama
+   Tutorial interactivo para cada página
+   ============================================================ */
+
+(function() {
+
+  // Detectar qué página es
+  const page = location.pathname.split('/').pop() || 'index.html';
+
+  // Tutoriales por página
+  const tutorials = {
+    'index.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'Soy la mascota de Storemaps. ¡Voy a mostrarte cómo usar la app! Tócame cuando quieras ayuda.', icon: '🦎', highlight: null },
+      { title: 'Barra de navegación', text: 'Aquí arriba puedes moverte entre las secciones: Mapa, Descubrir, Favoritos, Foro, Videos y Perfil.', icon: '🗺️', highlight: '.main-menu' },
+      { title: 'Buscador', text: 'Escribe aquí el nombre de una tienda o producto para encontrarlo rápidamente en el mapa.', icon: '🔍', highlight: '.search-bar' },
+      { title: 'El Mapa', text: 'Este mapa muestra todas las tiendas de Ibagué. Los pins de colores son cada negocio. ¡Toca uno para ver info!', icon: '📍', highlight: '#map' },
+      { title: 'Filtros del mapa', text: 'Usa estos botones para filtrar las tiendas por categoría: Calzado, Ropa, Comida, etc.', icon: '🎯', highlight: '.map-section .map-filter-btn' },
+      { title: 'Categorías rápidas', text: 'Accede rápidamente a cualquier categoría de productos tocando estas tarjetas.', icon: '🛍️', highlight: '.categories' },
+      { title: '¡Listo! 🎉', text: 'Ya conoces el Mapa. Explora las otras secciones o tócame si necesitas ayuda. ¡A comprar local!', icon: '🔥', highlight: null },
+    ],
+    'discover.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'Estás en Descubrir, donde encuentras todos los productos de las tiendas de Ibagué.', icon: '🦎', highlight: null },
+      { title: 'Filtros por categoría', text: 'Toca cualquier categoría para ver solo esos productos. ¡Puedes filtrar por Ropa, Comida, Tecnología y más!', icon: '🎯', highlight: '.filter-bar' },
+      { title: 'Buscador', text: 'Escribe el nombre de un producto o tienda aquí para buscarlo directamente.', icon: '🔍', highlight: '#searchInput' },
+      { title: 'Tarjetas de productos', text: 'Cada tarjeta muestra un producto. Toca la imagen para ver más detalles como dirección y horario.', icon: '🛍️', highlight: '.pin-card' },
+      { title: 'Botón de favorito ❤️', text: 'Toca el corazón en cualquier producto para guardarlo en Favoritos. ¡Se pone rojo al guardarlo!', icon: '❤️', highlight: '.heart-btn' },
+      { title: 'Ver en mapa', text: 'Desde los detalles del producto puedes abrirlo directamente en Google Maps.', icon: '📍', highlight: null },
+      { title: '¡Ya eres un experto! 🎉', text: 'Ahora sabes usar Descubrir. ¡Explora los productos y guarda tus favoritos!', icon: '🔥', highlight: null },
+    ],
+    'favorites.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'Aquí están todos los productos que guardaste con ❤️ en Descubrir.', icon: '🦎', highlight: null },
+      { title: 'Tus favoritos', text: 'Cada tarjeta es un producto que marcaste como favorito. Se guardan automáticamente en tu dispositivo.', icon: '❤️', highlight: '.fav-card' },
+      { title: 'Quitar favorito', text: 'Toca la ✕ en la esquina de cualquier tarjeta para quitarlo de favoritos.', icon: '🗑️', highlight: '.remove-btn' },
+      { title: 'Ver en mapa', text: 'El botón verde te lleva directamente a la ubicación de la tienda en Google Maps.', icon: '📍', highlight: '.btn-map' },
+      { title: '¡Listo! 🎉', text: 'Ve a Descubrir para agregar más productos a tus favoritos tocando el ❤️ en cada tarjeta.', icon: '🔥', highlight: null },
+    ],
+    'videos.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'Estás en Videos, donde las tiendas muestran sus productos en formato corto estilo TikTok.', icon: '🦎', highlight: null },
+      { title: 'Desliza para navegar', text: 'Desliza hacia arriba o abajo para pasar al siguiente video. ¡Cada uno es de una tienda diferente!', icon: '👆', highlight: '.videos-scroll' },
+      { title: 'Dar like ❤️', text: 'Toca el corazón para darle like al video. El contador se actualiza y se guarda tu reacción.', icon: '❤️', highlight: '.action-btn' },
+      { title: 'Info del producto', text: 'Abajo de cada video ves el nombre de la tienda, descripción y precio del producto destacado.', icon: '🏷️', highlight: '.video-info' },
+      { title: 'Navegación inferior', text: 'Usa esta barra para moverte entre todas las secciones de la app.', icon: '🗺️', highlight: '.bottom-nav' },
+      { title: '¡Disfruta! 🎉', text: 'Mira videos de las tiendas locales de Ibagué y descubre sus mejores productos.', icon: '🔥', highlight: null },
+    ],
+    'profile.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'En Perfil puedes entrar como Usuario, Empresa o Super Admin según tu rol.', icon: '🦎', highlight: null },
+      { title: 'Como Usuario', text: 'Inicia sesión con tu correo para ver tus favoritos, historial y configuración personal.', icon: '👤', highlight: '.role-card.user' },
+      { title: 'Como Empresa', text: 'Las tiendas ingresan con NIT + correo + pregunta de seguridad. Podrás agregar productos y videos.', icon: '🏪', highlight: '.role-card.empresa' },
+      { title: 'Panel de empresa', text: 'Como empresa puedes subir productos, crear videos y promociones. ¡Tu pin aparece en el mapa!', icon: '📦', highlight: null },
+      { title: 'Super Admin', text: 'El admin revisa y modera comentarios, videos y productos que no sean apropiados.', icon: '🛡️', highlight: '.role-card.admin' },
+      { title: '¡Listo! 🎉', text: 'Elige tu rol y empieza a usar Storemaps. ¡Tócame cuando necesites ayuda!', icon: '🔥', highlight: null },
+    ],
+    'forum.html': [
+      { title: '¡Hola! Soy Axo 👋', text: 'Estás en el Foro, donde la comunidad comparte recomendaciones de tiendas de Ibagué.', icon: '🦎', highlight: null },
+      { title: 'Crear publicación', text: 'Escribe un título y tu pregunta o recomendación aquí, luego toca "Publicar".', icon: '✏️', highlight: '.new-post' },
+      { title: 'Ver publicaciones', text: 'Aquí aparecen todas las preguntas y recomendaciones de la comunidad.', icon: '💬', highlight: '#forumPosts' },
+      { title: '¡Participa! 🎉', text: 'Comparte tus tiendas favoritas y ayuda a otros a descubrir el comercio local de Ibagué.', icon: '🔥', highlight: null },
+    ],
+  };
+
+  const steps = tutorials[page] || tutorials['index.html'];
+  let currentStep = 0;
+  let isOpen = false;
+
+  // Limpiar highlight anterior
+  function clearHighlight() {
+    document.querySelectorAll('.mascota-highlight').forEach(el => {
+      el.classList.remove('mascota-highlight');
+    });
+    const overlay = document.getElementById('mascota-overlay');
+    if (overlay) overlay.remove();
+  }
+
+  function highlightElement(selector) {
+    clearHighlight();
+    if (!selector) return;
+    const el = document.querySelector(selector);
+    if (!el) return;
+    el.classList.add('mascota-highlight');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function showStep(idx) {
+    const step = steps[idx];
+    if (!step) return;
+
+    // Update bubble content
+    document.getElementById('axo-step-icon').textContent = step.icon;
+    document.getElementById('axo-step-title').textContent = step.title;
+    document.getElementById('axo-step-text').textContent = step.text;
+
+    // Dots
+    document.querySelectorAll('.axo-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === idx);
+    });
+
+    // Buttons
+    const prevBtn = document.getElementById('axo-prev');
+    const nextBtn = document.getElementById('axo-next');
+    prevBtn.style.display = idx === 0 ? 'none' : 'flex';
+    nextBtn.textContent = idx === steps.length - 1 ? '¡Listo! 🎉' : 'Siguiente →';
+
+    // Highlight
+    highlightElement(step.highlight);
+
+    // Mascot expression
+    const face = document.getElementById('axo-face');
+    if (idx === steps.length - 1) {
+      face.textContent = '🎉';
+    } else if (step.highlight) {
+      face.textContent = '👀';
+    } else {
+      face.textContent = '😊';
+    }
+  }
+
+  function openTutorial() {
+    isOpen = true;
+    currentStep = 0;
+    document.getElementById('axo-bubble').style.display = 'flex';
+    document.getElementById('axo-mascot').classList.add('axo-open');
+    showStep(0);
+    // Animate mascot
+    document.getElementById('axo-mascot').style.animation = 'none';
+    setTimeout(() => {
+      document.getElementById('axo-mascot').style.animation = '';
+    }, 100);
+  }
+
+  function closeTutorial() {
+    isOpen = false;
+    document.getElementById('axo-bubble').style.display = 'none';
+    document.getElementById('axo-mascot').classList.remove('axo-open');
+    clearHighlight();
+    // Face back to smile
+    document.getElementById('axo-face').textContent = '😊';
+  }
+
+  function nextStep() {
+    if (currentStep >= steps.length - 1) {
+      closeTutorial();
+      return;
+    }
+    currentStep++;
+    showStep(currentStep);
+  }
+
+  function prevStep() {
+    if (currentStep <= 0) return;
+    currentStep--;
+    showStep(currentStep);
+  }
+
+  // Inject CSS
+  const style = document.createElement('style');
+  style.textContent = `
+    /* ===== MASCOTA WIDGET ===== */
+    #axo-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* BUBBLE */
+    #axo-bubble {
+      display: none;
+      flex-direction: column;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 0 0 2px #3b8ef8;
+      width: 280px;
+      overflow: hidden;
+      animation: axoBubbleIn .3s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    @keyframes axoBubbleIn {
+      from { opacity:0; transform: scale(0.7) translateY(20px); }
+      to   { opacity:1; transform: scale(1) translateY(0); }
+    }
+
+    .axo-bubble-header {
+      background: linear-gradient(135deg, #1d6ef5, #4fa8ff);
+      padding: 14px 16px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .axo-step-icon { font-size: 22px; }
+
+    .axo-step-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: white;
+      flex: 1;
+      margin-left: 8px;
+    }
+
+    .axo-close {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      border-radius: 50%;
+      width: 26px;
+      height: 26px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: .2s;
+      flex-shrink: 0;
+    }
+    .axo-close:hover { background: rgba(255,255,255,0.4); }
+
+    .axo-bubble-body {
+      padding: 14px 16px;
+    }
+
+    #axo-step-text {
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.55;
+    }
+
+    /* DOTS */
+    .axo-dots {
+      display: flex;
+      gap: 5px;
+      justify-content: center;
+      margin: 10px 0 8px;
+    }
+    .axo-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #d1d5db;
+      transition: .2s;
+      cursor: pointer;
+    }
+    .axo-dot.active {
+      background: #1d6ef5;
+      transform: scale(1.3);
+    }
+
+    /* BUTTONS */
+    .axo-buttons {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px 14px;
+    }
+    #axo-prev {
+      background: #f3f4f6;
+      color: #374151;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: .2s;
+    }
+    #axo-prev:hover { background: #e5e7eb; }
+    #axo-next {
+      flex: 1;
+      background: linear-gradient(135deg, #1d6ef5, #4fa8ff);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s;
+    }
+    #axo-next:hover { opacity: .9; transform: scale(1.02); }
+
+    /* MASCOT BUTTON */
+    #axo-mascot {
+      width: 80px;
+      height: 88px;
+      cursor: pointer;
+      filter: drop-shadow(0 6px 18px rgba(29,110,245,0.5));
+      transition: transform .2s;
+      animation: axoFloat 3s ease-in-out infinite;
+      position: relative;
+    }
+    #axo-mascot:hover { transform: scale(1.12); }
+    #axo-mascot.axo-open { animation: axoBounce .4s ease; filter: drop-shadow(0 6px 18px rgba(29,110,245,0.8)); }
+
+    @keyframes axoFloat {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+    @keyframes axoBounce {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.2) rotate(-5deg); }
+      70%  { transform: scale(0.95) rotate(3deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    /* TOOLTIP */
+    #axo-tooltip {
+      position: absolute;
+      bottom: 78px;
+      right: 0;
+      background: #1d6ef5;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+      pointer-events: none;
+      animation: axoTooltipPop 2s ease 1s forwards;
+      opacity: 0;
+      box-shadow: 0 4px 12px rgba(29,110,245,.4);
+    }
+    #axo-tooltip::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      right: 22px;
+      border: 6px solid transparent;
+      border-top-color: #1d6ef5;
+      border-bottom: none;
+    }
+    @keyframes axoTooltipPop {
+      0%   { opacity:0; transform: translateY(6px); }
+      15%  { opacity:1; transform: translateY(0); }
+      75%  { opacity:1; }
+      100% { opacity:0; }
+    }
+
+    /* FACE OVERLAY */
+    #axo-face {
+      position: absolute;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 16px;
+      pointer-events: none;
+      transition: .3s;
+    }
+
+    /* HIGHLIGHT */
+    .mascota-highlight {
+      outline: 3px solid #1d6ef5 !important;
+      outline-offset: 4px !important;
+      border-radius: 10px !important;
+      box-shadow: 0 0 0 6px rgba(29,110,245,0.15) !important;
+      transition: outline .3s, box-shadow .3s !important;
+      position: relative;
+      z-index: 100;
+    }
+
+    @media(max-width: 480px) {
+      #axo-container { bottom: 16px; right: 16px; }
+      #axo-bubble { width: 250px; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Inject HTML
+  const container = document.createElement('div');
+  container.id = 'axo-container';
+
+  // Dots HTML
+  const dotsHTML = steps.map((_, i) => `<div class="axo-dot${i===0?' active':''}" onclick="axoGoTo(${i})"></div>`).join('');
+
+  container.innerHTML = `
+    <div id="axo-bubble">
+      <div class="axo-bubble-header">
+        <span class="axo-step-icon" id="axo-step-icon">🦎</span>
+        <span class="axo-step-title" id="axo-step-title">¡Hola!</span>
+        <button class="axo-close" onclick="axoClose()">✕</button>
+      </div>
+      <div class="axo-bubble-body">
+        <p id="axo-step-text"></p>
+        <div class="axo-dots">${dotsHTML}</div>
+      </div>
+      <div class="axo-buttons">
+        <button id="axo-prev" onclick="axoPrev()">← Atrás</button>
+        <button id="axo-next" onclick="axoNext()">Siguiente →</button>
+      </div>
+    </div>
+
+    <div style="position:relative;">
+      <div id="axo-tooltip">¡Tócame para el tutorial! 👆</div>
+      <!-- AXOLOTL SVG — Rediseñado fiel a la imagen -->
+      <svg id="axo-mascot" onclick="axoToggle()" viewBox="0 0 240 260" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Cuerpo principal: azul medio con luz en centro-arriba -->
+          <radialGradient id="gBody" cx="42%" cy="38%" r="58%">
+            <stop offset="0%"   stop-color="#5bb8f5"/>
+            <stop offset="55%"  stop-color="#3a8fe8"/>
+            <stop offset="100%" stop-color="#1a5cc8"/>
+          </radialGradient>
+          <!-- Cabeza: más claro arriba -->
+          <radialGradient id="gHead" cx="40%" cy="32%" r="60%">
+            <stop offset="0%"   stop-color="#7ecfff"/>
+            <stop offset="50%"  stop-color="#4daef0"/>
+            <stop offset="100%" stop-color="#2070d8"/>
+          </radialGradient>
+          <!-- Branquias: más oscuras -->
+          <radialGradient id="gGill" cx="30%" cy="30%" r="70%">
+            <stop offset="0%"   stop-color="#4aaaf5"/>
+            <stop offset="100%" stop-color="#1a4ec0"/>
+          </radialGradient>
+          <!-- Patas: medianas -->
+          <radialGradient id="gPaw" cx="35%" cy="25%" r="65%">
+            <stop offset="0%"   stop-color="#6dc5ff"/>
+            <stop offset="100%" stop-color="#2878e0"/>
+          </radialGradient>
+          <!-- Cola -->
+          <radialGradient id="gTail" cx="20%" cy="20%" r="80%">
+            <stop offset="0%"   stop-color="#4aaaf5"/>
+            <stop offset="100%" stop-color="#1248b8"/>
+          </radialGradient>
+          <!-- Llama exterior -->
+          <radialGradient id="gFlame1" cx="50%" cy="80%" r="60%">
+            <stop offset="0%"   stop-color="#60e0ff"/>
+            <stop offset="60%"  stop-color="#1a90ff"/>
+            <stop offset="100%" stop-color="#0050cc" stop-opacity="0"/>
+          </radialGradient>
+          <!-- Llama interior brillo -->
+          <radialGradient id="gFlame2" cx="50%" cy="85%" r="55%">
+            <stop offset="0%"   stop-color="#ffffff"/>
+            <stop offset="40%"  stop-color="#a0eeff"/>
+            <stop offset="100%" stop-color="#40b8ff" stop-opacity="0"/>
+          </radialGradient>
+          <!-- Brillo cuerpo -->
+          <radialGradient id="gShine" cx="35%" cy="25%" r="55%">
+            <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+          </radialGradient>
+          <!-- Filtro glow llama -->
+          <filter id="flameGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- ══════════════ LLAMA AZUL ══════════════ -->
+        <!-- Partículas flotantes -->
+        <circle cx="108" cy="14" r="2.2" fill="#60ddff" opacity="0.7"/>
+        <circle cx="93"  cy="10" r="1.6" fill="#80e8ff" opacity="0.6"/>
+        <circle cx="113" cy="22" r="1.4" fill="#40ccff" opacity="0.5"/>
+        <!-- Llama exterior (azul eléctrico) -->
+        <path d="M120 42 C118 32 112 20 120 8 C114 14 108 6 110 -2 C105 6 98 2 100 12 C96 4 90 8 92 16 C88 10 82 18 90 28 C84 34 88 44 96 46 C90 52 95 60 100 56 C105 60 110 52 104 46 C112 44 116 34 120 42Z"
+              fill="url(#gFlame1)" filter="url(#flameGlow)" opacity="0.95"/>
+        <!-- Llama media -->
+        <path d="M113 40 C112 32 107 22 113 13 C108 18 104 12 105 6 C101 13 97 9 98 17 C95 11 90 16 96 24 C91 29 94 38 99 40 C95 45 98 52 102 49 C106 52 109 45 105 40 C110 38 113 32 113 40Z"
+              fill="#3ac8ff" opacity="0.85"/>
+        <!-- Llama núcleo brillante -->
+        <path d="M107 38 C106 32 103 26 107 20 C104 24 101 20 102 15 C100 20 97 17 98 23 C96 19 93 23 97 29 C94 32 96 39 100 40 C97 43 99 48 102 46 C105 48 107 43 104 40 C107 38 107 33 107 38Z"
+              fill="url(#gFlame2)" opacity="0.9"/>
+        <!-- Brillo centro llama -->
+        <ellipse cx="101" cy="36" rx="5" ry="7" fill="white" opacity="0.55" filter="url(#softGlow)"/>
+        <!-- Base llama / resplandor en cabeza -->
+        <ellipse cx="101" cy="50" rx="12" ry="5" fill="#60d8ff" opacity="0.25"/>
+
+        <!-- ══════════════ BRANQUIAS IZQUIERDA (tipo ala) ══════════════ -->
+        <!-- Base del ala -->
+        <path d="M72 90 C62 80 42 72 30 60 C28 74 36 84 50 90 C38 92 28 100 30 112 C40 106 56 100 72 98Z"
+              fill="url(#gGill)" opacity="0.9"/>
+        <!-- Deditos izquierda — 3 protuberancias redondeadas -->
+        <ellipse cx="31" cy="58" rx="8" ry="6" fill="#1a4ec0" opacity="0.95"/>
+        <ellipse cx="26" cy="72" rx="7.5" ry="5.5" fill="#1a4ec0" opacity="0.95"/>
+        <ellipse cx="27" cy="87" rx="7" ry="5.5" fill="#1a4ec0" opacity="0.95"/>
+        <!-- Contorno ala izquierda -->
+        <path d="M72 90 C62 80 44 73 31 60 C28 74 37 85 50 90 C38 93 28 101 30 112 C41 106 56 100 72 98Z"
+              fill="none" stroke="#1248b8" stroke-width="1.5" opacity="0.5"/>
+
+        <!-- ══════════════ BRANQUIAS DERECHA (tipo ala) ══════════════ -->
+        <path d="M168 90 C178 80 198 72 210 60 C212 74 204 84 190 90 C202 92 212 100 210 112 C200 106 184 100 168 98Z"
+              fill="url(#gGill)" opacity="0.9"/>
+        <!-- Deditos derecha -->
+        <ellipse cx="209" cy="58" rx="8" ry="6" fill="#1a4ec0" opacity="0.95"/>
+        <ellipse cx="214" cy="72" rx="7.5" ry="5.5" fill="#1a4ec0" opacity="0.95"/>
+        <ellipse cx="213" cy="87" rx="7" ry="5.5" fill="#1a4ec0" opacity="0.95"/>
+        <!-- Contorno ala derecha -->
+        <path d="M168 90 C178 80 196 73 209 60 C212 74 203 85 190 90 C202 93 212 101 210 112 C199 106 184 100 168 98Z"
+              fill="none" stroke="#1248b8" stroke-width="1.5" opacity="0.5"/>
+
+        <!-- ══════════════ COLA CURVADA ══════════════ -->
+        <!-- Cola larga que se curva a la izquierda-abajo como en la imagen -->
+        <path d="M100 210 C88 218 72 228 60 240 C52 248 50 256 58 258 C70 252 82 244 92 234 C96 228 100 220 104 214Z"
+              fill="url(#gTail)"/>
+        <!-- Borde más oscuro cola -->
+        <path d="M100 210 C88 218 72 228 60 240 C52 248 50 256 58 258 C70 252 82 244 92 234 C96 228 100 220 104 214Z"
+              fill="none" stroke="#1248b8" stroke-width="1.2" opacity="0.4"/>
+
+        <!-- ══════════════ CUERPO PRINCIPAL ══════════════ -->
+        <!-- Sombra/profundidad cuerpo -->
+        <ellipse cx="122" cy="170" rx="52" ry="56" fill="#1248b8" opacity="0.18"/>
+        <!-- Cuerpo gordo y redondo -->
+        <ellipse cx="118" cy="162" rx="58" ry="62" fill="url(#gBody)"/>
+
+        <!-- ══════════════ CABEZA GRANDE Y REDONDA ══════════════ -->
+        <!-- Sombra cabeza -->
+        <ellipse cx="122" cy="100" rx="56" ry="50" fill="#1248b8" opacity="0.15"/>
+        <!-- Cabeza -->
+        <ellipse cx="118" cy="97" rx="62" ry="55" fill="url(#gHead)"/>
+
+        <!-- Brillo esférico cabeza -->
+        <ellipse cx="100" cy="78" rx="28" ry="16" fill="url(#gShine)" transform="rotate(-15 100 78)"/>
+
+        <!-- ══════════════ OJOS ══════════════ -->
+        <!-- Sombra ojo izquierdo -->
+        <circle cx="95"  cy="96" r="13" fill="#0c2878" opacity="0.3"/>
+        <!-- Ojo izquierdo -->
+        <circle cx="93"  cy="94" r="13" fill="#0c2878"/>
+        <!-- Brillo ojo izquierdo -->
+        <circle cx="88"  cy="89" r="4.5" fill="white" opacity="0.7"/>
+        <circle cx="96"  cy="97" r="2"   fill="white" opacity="0.3"/>
+
+        <!-- Sombra ojo derecho -->
+        <circle cx="145" cy="96" r="13" fill="#0c2878" opacity="0.3"/>
+        <!-- Ojo derecho -->
+        <circle cx="143" cy="94" r="13" fill="#0c2878"/>
+        <!-- Brillo ojo derecho -->
+        <circle cx="138" cy="89" r="4.5" fill="white" opacity="0.7"/>
+        <circle cx="146" cy="97" r="2"   fill="white" opacity="0.3"/>
+
+        <!-- ══════════════ SONRISA ══════════════ -->
+        <path d="M108 114 Q118 123 128 114" stroke="#0c2878" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+
+        <!-- ══════════════ PATITAS FRONTALES ══════════════ -->
+        <!-- Patita izquierda -->
+        <ellipse cx="84" cy="172" rx="18" ry="13" transform="rotate(-25 84 172)" fill="url(#gPaw)"/>
+        <!-- Deditos patita izquierda -->
+        <circle cx="70" cy="163" r="7"   fill="url(#gPaw)"/>
+        <circle cx="76" cy="157" r="6.5" fill="url(#gPaw)"/>
+        <circle cx="83" cy="154" r="6"   fill="url(#gPaw)"/>
+        <!-- Línea dedos izquierda -->
+        <path d="M70 165 Q77 160 84 156" stroke="#1248b8" stroke-width="1.5" fill="none" opacity="0.5" stroke-linecap="round"/>
+
+        <!-- Patita derecha -->
+        <ellipse cx="154" cy="172" rx="18" ry="13" transform="rotate(25 154 172)" fill="url(#gPaw)"/>
+        <!-- Deditos patita derecha -->
+        <circle cx="168" cy="163" r="7"   fill="url(#gPaw)"/>
+        <circle cx="162" cy="157" r="6.5" fill="url(#gPaw)"/>
+        <circle cx="155" cy="154" r="6"   fill="url(#gPaw)"/>
+        <!-- Línea dedos derecha -->
+        <path d="M168 165 Q161 160 154 156" stroke="#1248b8" stroke-width="1.5" fill="none" opacity="0.5" stroke-linecap="round"/>
+
+        <!-- ══════════════ BARRIGA / DETALLE VIENTRE ══════════════ -->
+        <!-- Barriga clara oval -->
+        <ellipse cx="118" cy="178" rx="32" ry="26" fill="#7ecfff" opacity="0.22"/>
+        <!-- Líneas sutiles barriga como en la imagen -->
+        <path d="M104 188 Q118 196 132 188" stroke="#2878e0" stroke-width="1.8" fill="none" opacity="0.35" stroke-linecap="round"/>
+        <path d="M108 178 Q118 184 128 178" stroke="#2878e0" stroke-width="1.5" fill="none" opacity="0.25" stroke-linecap="round"/>
+
+        <!-- Brillo final cuerpo -->
+        <ellipse cx="100" cy="148" rx="20" ry="12" fill="white" opacity="0.08"/>
+      </svg>
+      <div id="axo-face">😊</div>
+    </div>
+  `;
+
+  document.body.appendChild(container);
+
+  // Global functions
+  window.axoToggle = function() {
+    if (isOpen) { closeTutorial(); } else { openTutorial(); }
+  };
+  window.axoClose = closeTutorial;
+  window.axoNext = nextStep;
+  window.axoPrev = prevStep;
+  window.axoGoTo = function(idx) {
+    currentStep = idx;
+    showStep(idx);
+  };
+
+})();
+</script>
+
+<script>
+(function() {
+  function updateNav() {
+    const token = localStorage.getItem('sm_token');
+    const user = (() => { try { return JSON.parse(localStorage.getItem('sm_user')); } catch(e) { return null; } })();
+    const link = document.getElementById('navProfileLink');
+    if (!link) return;
+    const span = link.querySelector('span');
+    if (token && user) {
+      const name = user.displayName || user.companyName || 'Perfil';
+      if (span) span.textContent = name;
+      link.style.color = '#16a34a';
+    } else {
+      if (span) span.textContent = 'Iniciar sesión';
+      link.style.color = '';
+    }
+  }
+  document.addEventListener('DOMContentLoaded', updateNav);
+  window.addEventListener('storage', updateNav);
+})();
+</script>
+
+</body>
+</html>

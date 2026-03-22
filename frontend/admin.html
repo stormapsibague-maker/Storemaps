@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storemaps - Panel de Tienda</title>
+    <link rel="stylesheet" href="src/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-wrapper { display: flex; min-height: 100vh; }
+        .admin-sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1a2332 0%, #0f1419 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .sidebar-header { padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 800;
+        }
+        .sidebar-menu { list-style: none; padding: 20px 0; }
+        .sidebar-menu li { margin: 4px 16px; }
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background: var(--primary);
+            color: white;
+        }
+        .admin-main {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f5f7fa;
+        }
+        .admin-header {
+            background: white;
+            padding: 20px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .admin-content { padding: 32px; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .stat-card h3 { font-size: 32px; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 24px;
+        }
+        @media (max-width: 768px) {
+            .admin-sidebar { display: none; }
+            .admin-main { margin-left: 0; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <i class="fas fa-store"></i>
+                    Mi Tienda
+                </div>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active" onclick="showSection('dashboard')">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a></li>
+                <li><a href="#" onclick="showSection('products')">
+                    <i class="fas fa-box"></i> Productos
+                </a></li>
+                <li><a href="#" onclick="showSection('videos')">
+                    <i class="fas fa-video"></i> Videos
+                </a></li>
+                <li><a href="#" onclick="showSection('forum')">
+                    <i class="fas fa-comments"></i> Foro de Ofertas
+                </a></li>
+                <li><a href="#" onclick="showSection('store')">
+                    <i class="fas fa-cog"></i> Configuración
+                </a></li>
+                <li><a href="index.html">
+                    <i class="fas fa-arrow-left"></i> Volver al sitio
+                </a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <header class="admin-header">
+                <div>
+                    <h1 id="pageTitle">Dashboard</h1>
+                    <p style="color: var(--gray-500);">Panel de administración de tu tienda</p>
+                </div>
+                <button class="btn btn-secondary" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                </button>
+            </header>
+
+            <div class="admin-content">
+                <!-- DASHBOARD -->
+                <section id="dashboardSection" class="section active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3 id="statProducts">0</h3>
+                            <p><i class="fas fa-box"></i> Productos</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 id="statRating">0</h3>
+                            <p><i class="fas fa-star"></i> Calificación</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 id="statViews">0</h3>
+                            <p><i class="fas fa-eye"></i> Vistas</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3 id="statFavorites">0</h3>
+                            <p><i class="fas fa-heart"></i> Favoritos</p>
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; border-radius: 16px; padding: 24px;">
+                        <h3 style="margin-bottom: 16px;">Acciones rápidas</h3>
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="showAddProduct()">
+                                <i class="fas fa-plus"></i> Agregar producto
+                            </button>
+                            <button class="btn btn-primary" onclick="showAddVideo()">
+                                <i class="fas fa-video"></i> Subir video
+                            </button>
+                            <button class="btn btn-primary" onclick="showAddForumPost()">
+                                <i class="fas fa-tag"></i> Crear oferta
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PRODUCTOS -->
+                <section id="productsSection" class="section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h2>Mis Productos</h2>
+                        <button class="btn btn-primary" onclick="showAddProduct()">
+                            <i class="fas fa-plus"></i> Nuevo producto
+                        </button>
+                    </div>
+                    <div id="productsList" class="products-grid">
+                        <div style="grid-column: 1/-1; text-align: center; padding: 60px;">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIDEOS -->
+                <section id="videosSection" class="section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h2>Mis Videos</h2>
+                        <button class="btn btn-primary" onclick="showAddVideo()">
+                            <i class="fas fa-plus"></i> Subir video
+                        </button>
+                    </div>
+                    <div id="videosList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;">
+                        <div style="grid-column: 1/-1; text-align: center; padding: 60px;">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- FORO -->
+                <section id="forumSection" class="section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h2>Mis Publicaciones</h2>
+                        <button class="btn btn-primary" onclick="showAddForumPost()">
+                            <i class="fas fa-plus"></i> Nueva publicación
+                        </button>
+                    </div>
+                    <div class="toggle-group" style="display: flex; gap: 12px; margin-bottom: 24px;">
+                        <button class="btn btn-secondary active" onclick="filterForum('all')" style="background: var(--primary); color: white;">Todas</button>
+                        <button class="btn btn-secondary" onclick="filterForum('offer')">Ofertas</button>
+                        <button class="btn btn-secondary" onclick="filterForum('request')">Solicitudes</button>
+                    </div>
+                    <div id="myForumPosts">
+                        <div style="text-align: center; padding: 60px;">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- CONFIGURACIÓN -->
+                <section id="storeSection" class="section">
+                    <h2 style="margin-bottom: 24px;">Configuración de la tienda</h2>
+                    <div style="background: white; border-radius: 16px; padding: 24px; max-width: 600px;">
+
+                        <!-- FOTO DEL NEGOCIO -->
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight:700;">📷 Foto del negocio</label>
+                            <div style="position:relative;margin-bottom:10px;">
+                                <img id="storeCurrentImg" src="" alt="Foto actual"
+                                     style="display:none;width:100%;height:200px;object-fit:cover;border-radius:12px;border:2px solid #e5e7eb;">
+                                <div id="storeNoImg"
+                                     style="width:100%;height:130px;background:#f3f4f6;border-radius:12px;border:2px dashed #d1d5db;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#9ca3af;">
+                                    <i class="fas fa-store" style="font-size:32px;margin-bottom:8px;"></i>
+                                    <span style="font-size:13px;">Sin foto aún</span>
+                                </div>
+                            </div>
+                            <div id="storeImgPreviewNew" style="display:none;width:100%;height:180px;border-radius:12px;overflow:hidden;margin-bottom:8px;border:2px solid #16a34a;position:relative;">
+                                <img id="storeImgPreviewNewImg" style="width:100%;height:100%;object-fit:cover;">
+                                <span style="position:absolute;top:8px;left:8px;background:#16a34a;color:white;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;">Nueva imagen</span>
+                            </div>
+                            <label for="storeImages" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:#f0fdf4;color:#16a34a;border:2px dashed #16a34a;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;">
+                                <i class="fas fa-camera"></i> Cambiar foto del negocio
+                            </label>
+                            <input type="file" id="storeImages" style="display:none;" accept="image/*" multiple onchange="previewStoreImagesEdit(this)">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Nombre de la tienda</label>
+                            <input type="text" id="storeName" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Descripción</label>
+                            <textarea id="storeDesc" class="form-input" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Dirección</label>
+                            <div style="display:flex;gap:8px;">
+                                <input type="text" id="storeAddress" class="form-input" style="flex:1;">
+                                <button type="button" onclick="useLocationForStoreEdit()" title="Usar mi ubicación actual"
+                                    style="background:#3b82f6;color:white;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-size:13px;">
+                                    <i class="fas fa-crosshairs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Teléfono</label>
+                            <input type="tel" id="storePhone" class="form-input">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div class="form-group">
+                                <label class="form-label">Hora apertura</label>
+                                <input type="time" id="storeOpen" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Hora cierre</label>
+                                <input type="time" id="storeClose" class="form-input">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-block" onclick="saveStore()">
+                            <i class="fas fa-save"></i> Guardar cambios
+                        </button>
+                    </div>
+                </section>
+        </main>
+    </div>
+
+    <!-- Modal Agregar Producto -->
+    <div id="addProductModal" class="modal">
+        <div class="modal-content" style="max-width: 500px; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3>Agregar Producto</h3>
+                <button onclick="closeModal('addProductModal')" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <form onsubmit="event.preventDefault(); addProduct();">
+                <div class="form-group">
+                    <label class="form-label">Nombre *</label>
+                    <input type="text" id="prodName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <textarea id="prodDesc" class="form-input" rows="3"></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label class="form-label">Precio *</label>
+                        <input type="number" id="prodPrice" class="form-input" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stock</label>
+                        <input type="number" id="prodStock" class="form-input" value="0" min="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Categoría *</label>
+                    <select id="prodCategory" class="form-input" required>
+                        <option value="">Seleccionar...</option>
+                        <optgroup label="Ropa Superior">
+                            <option value="camisetas">Camisetas</option>
+                            <option value="blusas">Blusas</option>
+                            <option value="sudaderas">Sudaderas</option>
+                            <option value="chaquetas">Chaquetas</option>
+                        </optgroup>
+                        <optgroup label="Ropa Inferior">
+                            <option value="pantalones">Pantalones</option>
+                            <option value="faldas">Faldas</option>
+                            <option value="shorts">Shorts</option>
+                        </optgroup>
+                        <optgroup label="Calzado">
+                            <option value="sneakers">Sneakers</option>
+                            <option value="formal">Formal</option>
+                            <option value="botas">Botas</option>
+                            <option value="sandalias">Sandalias</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Público objetivo</label>
+                    <select id="prodAudience" class="form-input">
+                        <option value="adultos">Adultos</option>
+                        <option value="adolescentes">Adolescentes</option>
+                        <option value="ninos">Niños</option>
+                        <option value="bebe">Bebé</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tallas (separadas por coma)</label>
+                    <input type="text" id="prodSizes" class="form-input" placeholder="S, M, L, XL">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Colores (separados por coma)</label>
+                    <input type="text" id="prodColors" class="form-input" placeholder="Rojo, Azul, Negro">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Imágenes * (máx 5)</label>
+                    <input type="file" id="prodImages" class="form-input" accept="image/*" multiple required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Guardar producto</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Video -->
+    <div id="addVideoModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3>Subir Video</h3>
+                <button onclick="closeModal('addVideoModal')" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <form onsubmit="event.preventDefault(); addVideo();">
+                <div class="form-group">
+                    <label class="form-label">Video *</label>
+                    <input type="file" id="videoFile" class="form-input" accept="video/*" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción</label>
+                    <textarea id="videoCaption" class="form-input" rows="3" placeholder="Describe tu video..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Producto relacionado</label>
+                    <select id="videoProduct" class="form-input">
+                        <option value="">Sin producto relacionado</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Subir video</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Foro -->
+    <div id="addForumModal" class="modal">
+        <div class="modal-content" style="max-width: 500px; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3>Nueva Publicación</h3>
+                <button onclick="closeModal('addForumModal')" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <form onsubmit="event.preventDefault(); addForumPost();">
+                <div class="form-group">
+                    <label class="form-label">Tipo</label>
+                    <select id="forumType" class="form-input" onchange="toggleForumFields()">
+                        <option value="offer">Oferta/Promoción</option>
+                        <option value="request">Solicitud</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Título *</label>
+                    <input type="text" id="forumTitle" class="form-input" required placeholder="Ej: 50% de descuento en sneakers">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descripción *</label>
+                    <textarea id="forumContent" class="form-input" rows="4" required placeholder="Describe tu oferta o solicitud..."></textarea>
+                </div>
+                <div id="offerFields">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label class="form-label">Precio oferta</label>
+                            <input type="number" id="forumPrice" class="form-input" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Precio normal</label>
+                            <input type="number" id="forumOriginalPrice" class="form-input" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Publicar</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="src/js/config.js"></script>
+    <script src="src/js/admin.js"></script>
+</body>
+</html>
